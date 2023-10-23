@@ -1,0 +1,6 @@
+﻿  CSVparser.cpp
+  VectorSorting.cpp
+C:\Users\abaires\source\repos\Bentrollio\SNHU-CS-300\VectorSorting\VectorSorting\VectorSorting.cpp(94,27): warning C4018: '<': signed/unsigned mismatch
+C:\Users\abaires\source\repos\Bentrollio\SNHU-CS-300\VectorSorting\VectorSorting\VectorSorting.cpp(259,31): warning C4018: '<': signed/unsigned mismatch
+  Generating Code...
+  VectorSorting.vcxproj -> C:\Users\abaires\source\repos\Bentrollio\SNHU-CS-300\VectorSorting\Debug\VectorSorting.exe
