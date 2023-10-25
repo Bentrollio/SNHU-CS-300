@@ -123,21 +123,42 @@ vector<Bid> loadBids(string csvPath) {
  */
 int partition(vector<Bid>& bids, int begin, int end) {
     //set low and high equal to begin and end
+    int low = begin;
+    int high = end;
 
-    // pick the middle element as pivot point
-
+    // Picking the middle element as the pivot
+    int pivot = low + (high - low) / 2;
     // while not done 
+    
+    while (true) {
 
         // keep incrementing low index while bids[low] < bids[pivot]
+        while (bids.at(low).title < bids.at(pivot).title) {
+            ++low;
+        }
 
         // keep decrementing high index while bids[pivot] < bids[high]
+        while (bids.at(high).title > bids.at(pivot).title) {
+            --high;
+        }
+
+        if (low >= high) {
+            break;
+        }
+        else {
+            swap(bids.at(low), bids.at(high));
+
+            ++low;
+            --high;
+        }
+    }
 
         /* If there are zero or one elements remaining,
             all bids are partitioned. Return high */
             // else swap the low and high bids (built in vector method)
                  // move low and high closer ++low, --high
         //return high;
-    return 1;
+    return high;
 }
 
 /**
@@ -151,17 +172,24 @@ int partition(vector<Bid>& bids, int begin, int end) {
  */
 void quickSort(vector<Bid>& bids, int begin, int end) {
     //set mid equal to 0
+    int mid = 0;
 
     /* Base case: If there are 1 or zero bids to sort,
      partition is already sorted otherwise if begin is greater
      than or equal to end then return*/
+    if (end - begin <= 0) {
+        return;
+    }
 
      /* Partition bids into low and high such that
       midpoint is location of last element in low */
+    mid = partition(bids, begin, end);
 
-      // recursively sort low partition (begin to mid)
+     // recursively sort low partition (begin to mid)
+    quickSort(bids, begin, mid);
 
-      // recursively sort high partition (mid+1 to end)
+     // recursively sort high partition (mid+1 to end)
+    quickSort(bids, mid + 1, end);
 
 }
 
@@ -175,11 +203,19 @@ void quickSort(vector<Bid>& bids, int begin, int end) {
  * @param bid address of the vector<Bid>
  *            instance to be sorted
  */
-void selectionSort(vector<Bid>& bids) {
+void selectionSort(vector<Bid>& bids) { //bids.title will be the sort field
     //define min as int (index of the current minimum bid)
+   // int min = {}; // tracks the lowest value we've encountered so far.
+    
+   /* for (int i = 0; i < bids.size(); ++i) {
+        cout << bids.at(i).title << endl;
+    } */
 
     // check size of bids vector
     // set size_t platform-neutral result equal to bid.size()
+    //size_t bidsSize = bids.size();
+    //size_t pos = {};
+    
 
     // pos is the position within bids that divides sorted/unsorted
     // for size_t pos = 0 and less than size -1 
@@ -189,6 +225,20 @@ void selectionSort(vector<Bid>& bids) {
                 // this element becomes the minimum
         // swap the current minimum with smaller one found
             // swap is a built in vector method
+
+    for (size_t i = 0; i < bids.size() - 1; ++i) {
+        int lowestNumberIndex = i;
+        for (size_t j = i + 1; j < bids.size(); ++j) {
+            if (bids.at(j).title < bids.at(lowestNumberIndex).title) {
+                lowestNumberIndex = j;
+            }
+        }
+        if (lowestNumberIndex != i) {
+            Bid temp = bids.at(i);
+            bids.at(i) = bids.at(lowestNumberIndex);
+            bids.at(lowestNumberIndex) = temp;
+        }
+    }
 }
 
 /**
@@ -265,12 +315,21 @@ int main(int argc, char* argv[]) {
 
             // FIXME (1b): Invoke the selection sort and report timing results
 
+        case 3:
+            cout << "selectionSort(bids)" << endl;
+            selectionSort(bids);
+            break;
+
             // FIXME (2b): Invoke the quick sort and report timing results
 
+        case 4:
+            cout << "quickSort(bids)" << endl;
+            quickSort(bids, 0, bids.size() - 1);
+            break;
         }
     }
 
-    cout << "Good bye." << endl;
+    cout << "Goodbye." << endl; // The space drove me crazy.
 
     return 0;
 }
