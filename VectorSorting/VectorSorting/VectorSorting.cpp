@@ -1,8 +1,8 @@
-//============================================================================
+ï»¿//============================================================================
 // Name        : VectorSorting.cpp
 // Author      : Alex Baires
 // Version     : 1.0
-// Copyright   : Copyright © 2017 SNHU COCE
+// Copyright   : Copyright ï¿½ 2017 SNHU COCE
 // Description : Vector Sorting Algorithms
 //============================================================================
 
@@ -18,10 +18,10 @@ using namespace std;
 // Global definitions visible to all methods and classes
 //============================================================================
 
-// forward declarations
+// Forward declarations
 double strToDouble(string str, char ch);
 
-// define a structure to hold bid information
+// Defines a structure to hold bid information
 struct Bid {
     string bidId; // unique identifier
     string title;
@@ -37,9 +37,9 @@ struct Bid {
 //============================================================================
 
 /**
- * Display the bid information to the console (std::out)
+ * Displays the bid information to the console (std::out)
  *
- * @param bid struct containing the bid info
+ * @param - bid struct containing the bid info
  */
 void displayBid(Bid bid) {
     cout << bid.bidId << ": " << bid.title << " | " << bid.amount << " | "
@@ -48,9 +48,9 @@ void displayBid(Bid bid) {
 }
 
 /**
- * Prompt user for bid information using console (std::in)
+ * Prompts the user for bid information using console (std::in)
  *
- * @return Bid struct containing the bid info
+ * @return - Bid struct containing the bid info
  */
 Bid getBid() {
     Bid bid;
@@ -75,33 +75,29 @@ Bid getBid() {
 }
 
 /**
- * Load a CSV file containing bids into a container
+ * Loads a CSV file containing bids into a container
  *
- * @param csvPath the path to the CSV file to load
- * @return a container holding all the bids read
+ * @param csvPath - the path to the CSV file to load
+ * @return - a container holding all the bids read
  */
 vector<Bid> loadBids(string csvPath) {
     cout << "Loading CSV file " << csvPath << endl;
 
-    // Define a vector data structure to hold a collection of bids.
+    // Defines a vector data structure to hold a collection of bids.
     vector<Bid> bids;
 
-    // initialize the CSV Parser using the given path
+    // Initializes the CSV Parser using the given path
     csv::Parser file = csv::Parser(csvPath);
 
     try {
-        // loop to read rows of a CSV file
+        // Loop to read rows of a CSV file
         for (int i = 0; i < file.rowCount(); i++) {
-
             // Create a data structure and add to the collection of bids
             Bid bid;
             bid.bidId = file[i][1];
             bid.title = file[i][0];
             bid.fund = file[i][8];
             bid.amount = strToDouble(file[i][4], '$');
-
-            //cout << "Item: " << bid.title << ", Fund: " << bid.fund << ", Amount: " << bid.amount << endl;
-
             // push this bid to the end
             bids.push_back(bid);
         }
@@ -112,53 +108,51 @@ vector<Bid> loadBids(string csvPath) {
     return bids;
 }
 
-// FIXME (2a): Implement the quick sort logic over bid.title
-
 /**
  * Partition the vector of bids into two parts, low and high
  *
  * @param bids Address of the vector<Bid> instance to be partitioned
  * @param begin Beginning index to partition
  * @param end Ending index to partition
+ * 
+ * @return - int of highest index in low partition
  */
 int partition(vector<Bid>& bids, int begin, int end) {
-    //set low and high equal to begin and end
     int low = begin;
     int high = end;
 
-    // Picking the middle element as the pivot
-    int pivot = low + (high - low) / 2;
-    // while not done 
-    
-    while (true) {
+    // Choosing the middle index as the pivot.
+    int mid = begin + (end - begin) / 2;
 
-        // keep incrementing low index while bids[low] < bids[pivot]
-        while (bids.at(low).title < bids.at(pivot).title) {
+    // This stores the 'title' string value at the middle index of the bids array.
+    string pivot = bids.at(mid).title;
+    
+    // Intentional infinite loop that exits with conditional that triggers a break
+    while (true) {
+        // Keeps incrementing low index while the title string value is less than the pivot.
+        while (bids.at(low).title < pivot) {
             ++low;
         }
 
-        // keep decrementing high index while bids[pivot] < bids[high]
-        while (bids.at(high).title > bids.at(pivot).title) {
+        // Keeps decrementing high index while the title string value is greater than the pivot.
+        while (bids.at(high).title > pivot) {
             --high;
         }
 
+        // Checks whether the left index reaches or passes the right index
         if (low >= high) {
             break;
         }
+        /* ELSE swaps values when element in left partition is greater than the pivot
+         * and an element in the right partition is less than the pivot to properly sort both
+         * then moves the low and high indices closer together.*/
         else {
             swap(bids.at(low), bids.at(high));
-
             ++low;
             --high;
         }
     }
-
-        /* If there are zero or one elements remaining,
-            all bids are partitioned. Return high */
-            // else swap the low and high bids (built in vector method)
-                 // move low and high closer ++low, --high
-        //return high;
-    return high;
+    return high; // returns highest index of low partition
 }
 
 /**
@@ -171,29 +165,23 @@ int partition(vector<Bid>& bids, int begin, int end) {
  * @param end the ending index to sort on
  */
 void quickSort(vector<Bid>& bids, int begin, int end) {
-    //set mid equal to 0
     int mid = 0;
 
-    /* Base case: If there are 1 or zero bids to sort,
-     partition is already sorted otherwise if begin is greater
-     than or equal to end then return*/
+    // Base case; the subarray has 0 or 1 elements.
     if (end - begin <= 0) {
         return;
     }
 
-     /* Partition bids into low and high such that
-      midpoint is location of last element in low */
+    // Partitions the range of elements and provides the index of
+    // the last element in the lower subarray partition.
     mid = partition(bids, begin, end);
 
-     // recursively sort low partition (begin to mid)
+    // Recursively sorts low partition
     quickSort(bids, begin, mid);
 
-     // recursively sort high partition (mid+1 to end)
+    // Recursively sorts high partition
     quickSort(bids, mid + 1, end);
-
 }
-
-// FIXME (1a): Implement the selection sort logic over bid.title
 
 /**
  * Perform a selection sort on bid title
@@ -203,40 +191,24 @@ void quickSort(vector<Bid>& bids, int begin, int end) {
  * @param bid address of the vector<Bid>
  *            instance to be sorted
  */
-void selectionSort(vector<Bid>& bids) { //bids.title will be the sort field
-    //define min as int (index of the current minimum bid)
-   // int min = {}; // tracks the lowest value we've encountered so far.
-    
-   /* for (int i = 0; i < bids.size(); ++i) {
-        cout << bids.at(i).title << endl;
-    } */
+void selectionSort(vector<Bid>& bids) {
+    int minimumBid = {}; // Tracks the lowest bid ecountered
 
-    // check size of bids vector
-    // set size_t platform-neutral result equal to bid.size()
-    //size_t bidsSize = bids.size();
-    //size_t pos = {};
-    
+    // pos is the demarcation between sorted and unsorted elements.
+    // Outer loop iterates through array except for final element
+    for (size_t pos = 0; pos < bids.size() - 1; ++pos) {
+        minimumBid = pos;
+        // Inner loop checks remaining values to find lower bid than minimum bid.
+        for (size_t rightPos = pos + 1; rightPos < bids.size(); ++rightPos) {
 
-    // pos is the position within bids that divides sorted/unsorted
-    // for size_t pos = 0 and less than size -1 
-        // set min = pos
-        // loop over remaining elements to the right of position
-            // if this element's title is less than minimum title
-                // this element becomes the minimum
-        // swap the current minimum with smaller one found
-            // swap is a built in vector method
-
-    for (size_t i = 0; i < bids.size() - 1; ++i) {
-        int lowestNumberIndex = i;
-        for (size_t j = i + 1; j < bids.size(); ++j) {
-            if (bids.at(j).title < bids.at(lowestNumberIndex).title) {
-                lowestNumberIndex = j;
+            // New minimum bid found.
+            if (bids.at(rightPos).title < bids.at(minimumBid).title) {
+                minimumBid = rightPos;
             }
         }
-        if (lowestNumberIndex != i) {
-            Bid temp = bids.at(i);
-            bids.at(i) = bids.at(lowestNumberIndex);
-            bids.at(lowestNumberIndex) = temp;
+        // Swaps if the minimum bid is not in the correct position
+        if (minimumBid != pos) {
+            swap(bids.at(pos), bids.at(minimumBid));
         }
     }
 }
@@ -255,10 +227,26 @@ double strToDouble(string str, char ch) {
 }
 
 /**
- * The one and only main() method
+ * Displays elapsed time and ticks
+ *
+ * @param ticks - The starting clock ticks defined as clock_t type
  */
-int main(int argc, char* argv[]) {
+void displayTelemetry(clock_t ticks) {
+    // Calculates the elapsed time and displays the result.
+    ticks = clock() - ticks; // current clock ticks minus starting clock ticks.
+    cout << "time: " << ticks << " clock ticks" << endl;
+    cout << "time: " << ticks * 1.0 / CLOCKS_PER_SEC << " seconds" << endl;
+}
 
+/**
+ *
+ * Handles and checks command-line arguments during execution and stores the csv file path into a variable
+ * for the mainMenu() function to utilize when it calls loadBids().
+ *
+ * @param argc - number of command line arguments
+ * @param argv - vector with the actual command line arguments
+ */
+string processCommandLine(int argc, char* argv[]) {
     // process command line arguments
     string csvPath;
     switch (argc) {
@@ -266,8 +254,19 @@ int main(int argc, char* argv[]) {
         csvPath = argv[1];
         break;
     default:
-        csvPath = "eBid_Monthly_Sales_Dec_2016.csv";
+        csvPath = "eBid_Monthly_Sales.csv";
     }
+    return csvPath;
+}
+
+/**
+ * Defines vector to hold bids, displays a main menu and loads/displays bids pulled from the CSV file.
+ * Depending on user choice, it will call either a Selection Sort or Quick Sort algorithm and display
+ * the processing time for comparison purposes.
+ *
+ * @param path - a string containing the path where the csv file can be found.
+ */
+void mainMenu(string path) {
 
     // Define a vector to hold all the bids
     vector<Bid> bids;
@@ -275,7 +274,10 @@ int main(int argc, char* argv[]) {
     // Define a timer variable
     clock_t ticks;
 
+    string csvPath = path;
+
     int choice = 0;
+
     while (choice != 9) {
         cout << "Menu:" << endl;
         cout << "  1. Load Bids" << endl;
@@ -298,10 +300,7 @@ int main(int argc, char* argv[]) {
             cout << bids.size() << " bids read" << endl;
 
             // Calculate elapsed time and display result
-            ticks = clock() - ticks; // current clock ticks minus starting clock ticks
-            cout << "time: " << ticks << " clock ticks" << endl;
-            cout << "time: " << ticks * 1.0 / CLOCKS_PER_SEC << " seconds" << endl;
-
+            displayTelemetry(ticks);
             break;
 
         case 2:
@@ -310,26 +309,46 @@ int main(int argc, char* argv[]) {
                 displayBid(bids[i]);
             }
             cout << endl;
-
             break;
 
-            // FIXME (1b): Invoke the selection sort and report timing results
-
+            // Invokes the selection sort while reporting the timing results.
         case 3:
-            cout << "selectionSort(bids)" << endl;
+            // Initializes a timer variable before using selection sort on bids.
+            ticks = clock();
+
+            // Calls selection sort method on the bids vector
             selectionSort(bids);
+
+            cout << bids.size() << " bids read" << endl;
+
+            // Calculates the elapsed time and displays the result.
+            displayTelemetry(ticks);
             break;
 
-            // FIXME (2b): Invoke the quick sort and report timing results
-
+            // Invokes the quick sort algorithm while reporting the timing results.
         case 4:
-            cout << "quickSort(bids)" << endl;
+            // Initializes a timer variable before using quick sort on bids.
+            ticks = clock();
+
+            // Calls quick sort method on the bids vector, with 0 as the first element and one minus the size of the vector as the last
             quickSort(bids, 0, bids.size() - 1);
+
+            cout << bids.size() << " bids read" << endl;
+
+            // Calculates the elapsed time and displays the result.
+            displayTelemetry(ticks);
             break;
         }
     }
-
     cout << "Goodbye." << endl; // The space drove me crazy.
+}
+
+/**
+ * The one and only main() method
+ */
+int main(int argc, char* argv[]) {
+
+    mainMenu(processCommandLine(argc, argv));
 
     return 0;
 }
