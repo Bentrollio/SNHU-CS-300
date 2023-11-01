@@ -1,6 +1,6 @@
 //============================================================================
 // Name        : LinkedList.cpp
-// Author      : Your Name
+// Author      : Alex Baires
 // Version     : 1.0
 // Copyright   : Copyright © 2017 SNHU COCE
 // Description : Lab 3-3 Lists and Searching
@@ -46,7 +46,7 @@ private:
     //Internal structure for list entries, housekeeping variables
     struct Node {
         Bid bid;
-        Node *next;
+        Node* next;
 
         // default constructor
         Node() {
@@ -81,6 +81,8 @@ public:
 LinkedList::LinkedList() {
     // FIXME (1): Initialize housekeeping variables
     //set head and tail equal to null
+    head = nullptr;
+    tail = nullptr;
 }
 
 /**
@@ -105,12 +107,26 @@ LinkedList::~LinkedList() {
 void LinkedList::Append(Bid bid) {
     // FIXME (2): Implement append logic
     //Create new node
+    Node* node = new Node(bid);
     //if there is nothing at the head...
     // new node becomes the head and the tail
-    //else
-    // make current tail node point to the new node
-    // and tail becomes the new node
+    if (head == nullptr) {
+        head = node;
+    }
+        //else
+        // make current tail node point to the new node
+        // and tail becomes the new node
+    else {
+        if (tail != nullptr) {
+            tail->next = node;
+        }
+    }
+
+    // new node is always the tail in append method
+    tail = node;
+
     //increase size count
+    ++size;
 }
 
 /**
@@ -119,12 +135,19 @@ void LinkedList::Append(Bid bid) {
 void LinkedList::Prepend(Bid bid) {
     // FIXME (3): Implement prepend logic
     // Create new node
+    Node* node = new Node(bid);
 
     // if there is already something at the head...
-    // new node points to current head as its next node
+    if (head != nullptr) {
+        // new node points to current head as its next node
+        node->next = head;
+    }
 
     // head now becomes the new node
+    head = node;
+
     //increase size count
+    ++size;
 
 }
 
@@ -134,8 +157,15 @@ void LinkedList::Prepend(Bid bid) {
 void LinkedList::PrintList() {
     // FIXME (4): Implement print logic
     // start at the head
+    Node* currentNode = head;
 
     // while loop over each node looking for a match
+    while (currentNode != nullptr) {
+        cout << currentNode->bid.bidId << ": " << currentNode->bid.title << " | "
+             << currentNode->bid.amount << " : " << currentNode->bid.fund << endl;
+        // Loops through each of the nodes.
+        currentNode = currentNode->next;
+    }
     //output current bidID, title, amount and fund
     //set current equal to next
 }
@@ -148,9 +178,34 @@ void LinkedList::PrintList() {
 void LinkedList::Remove(string bidId) {
     // FIXME (5): Implement remove logic
     // special case if matching node is the head
+    if (head != nullptr) {
+        if (head->bid.bidId.compare(bidId) == 0) {
+
+            Node* temp = head->next;
+            delete head;
+
+            head = temp;
+        }
+    }
     // make head point to the next node in the list
     //decrease size count
     //return
+
+    Node* currentBid = head;
+
+    while (currentBid->next != nullptr) {
+        if (currentBid->next->bid.bidId.compare(bidId) == 0) {
+            Node *temp = currentBid->next;
+
+            currentBid->next = temp->next;
+
+            delete temp;
+
+            --size;
+            return;
+        }
+        currentBid = currentBid->next;
+    }
 
     // start at the head
     // while loop over each node looking for a match
@@ -161,7 +216,7 @@ void LinkedList::Remove(string bidId) {
     // decrease size count
     //return
 
-    // curretn node is equal to next node
+    // current node is equal to next node
 }
 
 /**
@@ -171,7 +226,18 @@ void LinkedList::Remove(string bidId) {
  */
 Bid LinkedList::Search(string bidId) {
     // FIXME (6): Implement search logic
+    //Bid bid;
+    Node *currentBid = head;
+    Node* temp = new Node;
+    temp->bid.bidId = "";
 
+    while (currentBid != nullptr) {
+        if (currentBid->bid.bidId.compare(bidId) == 0) {
+            return currentBid->bid;
+        }
+        currentBid = currentBid->next;
+    }
+    return temp->bid;
     // special case if matching node is the head
     // make head point to the next node in the list
     //decrease size count
@@ -184,6 +250,7 @@ Bid LinkedList::Search(string bidId) {
     // else current node is equal to next node
 
     //return bid
+    //return bid;
 }
 
 /**
@@ -240,7 +307,7 @@ Bid getBid() {
  *
  * @return a LinkedList containing all the bids read
  */
-void loadBids(string csvPath, LinkedList *list) {
+void loadBids(string csvPath, LinkedList* list) {
     cout << "Loading CSV file " << csvPath << endl;
 
     // initialize the CSV Parser
@@ -262,7 +329,8 @@ void loadBids(string csvPath, LinkedList *list) {
             // add this bid to the end
             list->Append(bid);
         }
-    } catch (csv::Error &e) {
+    }
+    catch (csv::Error& e) {
         std::cerr << e.what() << std::endl;
     }
 }
@@ -279,6 +347,7 @@ double strToDouble(string str, char ch) {
     str.erase(remove(str.begin(), str.end(), ch), str.end());
     return atof(str.c_str());
 }
+
 
 /**
  * The one and only main() method
@@ -300,7 +369,7 @@ int main(int argc, char* argv[]) {
             bidKey = argv[2];
             break;
         default:
-            csvPath = "eBid_Monthly_Sales_Dec_2016.csv";
+            csvPath = "/Users/abaires/SNHU-CS-300/LinkedList/eBid_Monthly_Sales_Dec_2016.csv";
             bidKey = "98109";
     }
 
@@ -318,6 +387,7 @@ int main(int argc, char* argv[]) {
         cout << "  3. Display All Bids" << endl;
         cout << "  4. Find Bid" << endl;
         cout << "  5. Remove Bid" << endl;
+        cout << "  6. Add Bid" << endl;
         cout << "  9. Exit" << endl;
         cout << "Enter choice: ";
         cin >> choice;
@@ -349,6 +419,10 @@ int main(int argc, char* argv[]) {
                 break;
 
             case 4:
+                // Added user input to search by custom bidkey
+                cout << "Enter bid key:" << endl;
+                cin >> bidKey;
+
                 ticks = clock();
 
                 bid = bidList.Search(bidKey);
@@ -370,10 +444,17 @@ int main(int argc, char* argv[]) {
                 bidList.Remove(bidKey);
 
                 break;
+
+            case 6: // Added case 6 to add access to new Prepend() function.
+                bid = getBid();
+                bidList.Prepend(bid);
+                displayBid(bid);
+
+                break;
         }
     }
 
-    cout << "Good bye." << endl;
+    cout << "Goodbye." << endl;
 
     return 0;
 }
