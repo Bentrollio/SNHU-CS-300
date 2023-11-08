@@ -74,7 +74,7 @@ private:
 
     unsigned int tableSize = DEFAULT_SIZE;
 
-    unsigned int hash(int key);
+   unsigned int hash(unsigned int key);
 
 public:
     HashTable();
@@ -84,6 +84,7 @@ public:
     void PrintAll();
     void Remove(string bidId);
     Bid Search(string bidId);
+
 };
 
 /**
@@ -92,7 +93,8 @@ public:
 HashTable::HashTable() {
     // FIXME (1): Initialize the structures used to hold bids
 
-    // Initalize node structure by resizing tableSize
+    // Initialize node structure by resizing tableSize
+    nodes.resize(tableSize);
 }
 
 /**
@@ -102,7 +104,9 @@ HashTable::HashTable() {
  */
 HashTable::HashTable(unsigned int size) {
     // invoke local tableSize to size with this->
+    this->tableSize = size;
     // resize nodes size
+    nodes.resize(tableSize);
 }
 
 
@@ -111,7 +115,7 @@ HashTable::HashTable(unsigned int size) {
  */
 HashTable::~HashTable() {
     // FIXME (2): Implement logic to free storage when class is destroyed
-
+    nodes.erase(nodes.begin(), nodes.end()); // FIXME: Alex modification, remove end if funky.
     // erase nodes beginning
 }
 
@@ -124,9 +128,9 @@ HashTable::~HashTable() {
  * @param key The key to hash
  * @return The calculated hash
  */
-unsigned int HashTable::hash(int key) {
+unsigned int HashTable::hash(unsigned int key) {
     // FIXME (3): Implement logic to calculate a hash value
-    // return key tableSize
+    return key % tableSize; // Modulus of the table size for hash value.
 }
 
 /**
@@ -137,12 +141,35 @@ unsigned int HashTable::hash(int key) {
 void HashTable::Insert(Bid bid) {
     // FIXME (5): Implement logic to insert a bid
     // create the key for the given bid
-    // retrieve node using key
+    // Converts bidID string to c-string in order to convert to integer
+    unsigned key = hash(atoi(bid.bidId.c_str())); //FIXME: See if we can use sstream
+    // Retrieves node using its key.
+    Node* oldNode = &(nodes.at(key)); // oldNode points to the memory address
     // if no entry found for the key
+    if (oldNode == nullptr) {
+        Node* newNode = new Node(bid, key);
+        // Inserts node "key" places from the beginning of the vector
+        nodes.insert(nodes.begin() + key, (*newNode));
+    }
     // assign this node to the key position
     // else if node is not used
-    // assing old node key to UNIT_MAX, set to key, set old node to bid and old node next to null pointer
-    // else find the next open node
+    else {
+        // node found, key for the node entry has not been used yet
+        // assign old node key to UNIT_MAX, set to key, set old node to bid and old node next to null pointer
+        if (oldNode->key == UINT_MAX) {
+            oldNode->key = key;
+            oldNode->bid = bid;
+            oldNode->next = nullptr; // No more nodes pointed to.
+        }
+        // Iterate through each node's next pointer. While it isn't null,
+        // make it point to the next null until we find a null pointer. */
+        else {
+            while (oldNode->next != nullptr) {
+                oldNode = oldNode->next;
+            }
+            oldNode->next = new Node(bid, key);
+        }
+    }
     // add new newNode to end
 }
 
@@ -152,6 +179,23 @@ void HashTable::Insert(Bid bid) {
 void HashTable::PrintAll() {
     // FIXME (6): Implement logic to print all bids
     // for node begin to end iterate
+    for (Node anode : nodes) {
+        Node* currentNode = &anode;
+
+        if (currentNode->key != UINT_MAX) {
+            cout << currentNode->key << ": " << currentNode->bid.bidId << " | "
+                << currentNode->bid.title << " | " << currentNode->bid.amount << " | "
+                 << currentNode->bid.fund << endl;
+        }
+
+        while (currentNode->next != nullptr) {
+            currentNode = currentNode->next;
+            cout << currentNode->key << ": " << currentNode->bid.bidId << " | "
+                 << currentNode->bid.title << " | " << currentNode->bid.amount << " | "
+                 << currentNode->bid.fund << endl;
+        }
+
+    }
     //   if key not equal to UINT_MAx
     // output key, bidID, title, amount and fund
     // node is equal to next iter
@@ -169,7 +213,10 @@ void HashTable::PrintAll() {
 void HashTable::Remove(string bidId) {
     // FIXME (7): Implement logic to remove a bid
     // set key equal to hash atoi bidID cstring
+    unsigned key = hash(atoi(bidId.c_str()));
+
     // erase node begin and key
+    nodes.erase(nodes.begin() + key); // Offset, beginning of node plus offset
 }
 
 /**
@@ -183,10 +230,26 @@ Bid HashTable::Search(string bidId) {
     // FIXME (8): Implement logic to search for and return a bid
 
     // create the key for the given bid
-    // if entry found for the key
-    //return node bid
+    unsigned key = hash(atoi(bidId.c_str()));
+    // Retrieves node using its key.
+    Node* node = &(nodes.at(key)); // oldNode points to the memory address
 
-    // if no entry found for the key
+    // If no entry found for the key
+    if (node == nullptr || node->key == UINT_MAX) {
+        return bid;
+    }
+    // If matching node entry found
+    if (node != nullptr && node->key != UINT_MAX && node->bid.bidId.compare(bidId) == 0) {
+        return node->bid;
+    }
+
+    // Walk the linked list to find the match
+    while (node != nullptr) {
+        if (node->key != UINT_MAX && node->bid.bidId.compare(bidId) == 0) {
+            return node->bid;
+        }
+        node = node->next;
+    }
     // return bid
     // while node not equal to nullptr
     // if the current node matches, return it
@@ -264,24 +327,60 @@ double strToDouble(string str, char ch) {
 }
 
 /**
+ * Displays elapsed time and ticks
+ *
+ * @param ticks - The starting clock ticks defined as clock_t type
+ */
+void displayTelemetry(clock_t ticks) {
+    // Calculates the elapsed time and displays the result.
+    ticks = clock() - ticks; // current clock ticks minus starting clock ticks.
+    cout << "time: " << ticks << " clock ticks" << endl;
+    cout << "time: " << ticks * 1.0 / CLOCKS_PER_SEC << " seconds" << endl;
+}
+
+/**
+ *
+ * Handles and checks command-line arguments during execution and stores the csv file path into a variable
+ * for the mainMenu() function to utilize when it calls loadBids().
+ *
+ * @param argc - number of command line arguments
+ * @param argv - vector with the actual command line arguments
+ */
+string processCommandLine(int argc, char* argv[]) {
+    // process command line arguments
+    string csvPath;
+    switch (argc) {
+        case 2:
+            csvPath = argv[1];
+            //bidKey = "98109";
+            break;
+
+        default:
+            csvPath = "/Users/abaires/SNHU-CS-300/LinkedList/eBid_Monthly_Sales_Dec_2016.csv";
+            break;
+    }
+    return csvPath;
+}
+
+/**
  * The one and only main() method
  */
 int main(int argc, char* argv[]) {
 
     // process command line arguments
-    string csvPath, bidKey;
+    string csvPath, searchValue;
     switch (argc) {
         case 2:
             csvPath = argv[1];
-            bidKey = "98109";
+            searchValue = "98010";
             break;
         case 3:
             csvPath = argv[1];
-            bidKey = argv[2];
+            searchValue = argv[2];
             break;
         default:
             csvPath = "/Users/abaires/SNHU-CS-300/HashTable/eBid_Monthly_Sales_Dec_2016.csv";
-            bidKey = "98109";
+            searchValue = "98010";
     }
 
     // Define a timer variable
@@ -327,14 +426,14 @@ int main(int argc, char* argv[]) {
             case 3:
                 ticks = clock();
 
-                bid = bidTable->Search(bidKey);
+                bid = bidTable->Search(searchValue);
 
                 ticks = clock() - ticks; // current clock ticks minus starting clock ticks
 
                 if (!bid.bidId.empty()) {
                     displayBid(bid);
                 } else {
-                    cout << "Bid Id " << bidKey << " not found." << endl;
+                    cout << "Bid Id " << searchValue << " not found." << endl;
                 }
 
                 cout << "time: " << ticks << " clock ticks" << endl;
@@ -342,7 +441,7 @@ int main(int argc, char* argv[]) {
                 break;
 
             case 4:
-                bidTable->Remove(bidKey);
+                bidTable->Remove(searchValue);
                 break;
         }
     }
