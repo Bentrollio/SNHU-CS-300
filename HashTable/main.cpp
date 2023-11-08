@@ -3,7 +3,7 @@
 // Author      : Alex Baires
 // Version     : 1.0
 // Copyright   : Copyright © 2017 SNHU COCE
-// Description : Hello World in C++, Ansi-style
+// Description : Module 4 Hash Table Assignment
 //============================================================================
 
 #include <algorithm>
@@ -73,8 +73,7 @@ private:
     vector<Node> nodes;
 
     unsigned int tableSize = DEFAULT_SIZE;
-
-   unsigned int hash(unsigned int key);
+    unsigned int hash(unsigned int key);
 
 public:
     HashTable();
@@ -91,7 +90,6 @@ public:
  * Default constructor
  */
 HashTable::HashTable() {
-    // FIXME (1): Initialize the structures used to hold bids
 
     // Initialize node structure by resizing tableSize
     nodes.resize(tableSize);
@@ -103,20 +101,20 @@ HashTable::HashTable() {
  * by reducing collisions without wasting memory.
  */
 HashTable::HashTable(unsigned int size) {
-    // invoke local tableSize to size with this->
+    // Invokes local table size
     this->tableSize = size;
-    // resize nodes size
+
+    // Resizes nodes vector
     nodes.resize(tableSize);
 }
-
 
 /**
  * Destructor
  */
 HashTable::~HashTable() {
-    // FIXME (2): Implement logic to free storage when class is destroyed
-    nodes.erase(nodes.begin(), nodes.end()); // FIXME: Alex modification, remove end if funky.
-    // erase nodes beginning
+    // To be thorough, I used erase as a range
+    nodes.erase(nodes.begin(), nodes.end());
+
 }
 
 /**
@@ -129,8 +127,8 @@ HashTable::~HashTable() {
  * @return The calculated hash
  */
 unsigned int HashTable::hash(unsigned int key) {
-    // FIXME (3): Implement logic to calculate a hash value
-    return key % tableSize; // Modulus of the table size for hash value.
+
+    return key % tableSize; // Modulo of the table size calculates the hash value.
 }
 
 /**
@@ -139,70 +137,66 @@ unsigned int HashTable::hash(unsigned int key) {
  * @param bid The bid to insert
  */
 void HashTable::Insert(Bid bid) {
-    // FIXME (5): Implement logic to insert a bid
-    // create the key for the given bid
-    // Converts bidID string to c-string in order to convert to integer
-    unsigned key = hash(atoi(bid.bidId.c_str())); //FIXME: See if we can use sstream
+
+    // Converts bidID string to integer using stoi() standard string method introduced in C++11
+    // Then creates a key
+    unsigned key = hash(stoi(bid.bidId));
+
     // Retrieves node using its key.
     Node* oldNode = &(nodes.at(key)); // oldNode points to the memory address
+
     // if no entry found for the key
     if (oldNode == nullptr) {
         Node* newNode = new Node(bid, key);
         // Inserts node "key" places from the beginning of the vector
         nodes.insert(nodes.begin() + key, (*newNode));
     }
-    // assign this node to the key position
-    // else if node is not used
+
     else {
-        // node found, key for the node entry has not been used yet
-        // assign old node key to UNIT_MAX, set to key, set old node to bid and old node next to null pointer
+        // Node found, key for the node entry has not been used yet
         if (oldNode->key == UINT_MAX) {
             oldNode->key = key;
             oldNode->bid = bid;
             oldNode->next = nullptr; // No more nodes pointed to.
         }
         // Iterate through each node's next pointer. While it isn't null,
-        // make it point to the next null until we find a null pointer. */
+        // make it point to the next null until we find a null pointer.
         else {
             while (oldNode->next != nullptr) {
                 oldNode = oldNode->next;
             }
+
+            // Appends the new node to the linked list.
             oldNode->next = new Node(bid, key);
         }
     }
-    // add new newNode to end
 }
 
 /**
  * Print all bids
  */
 void HashTable::PrintAll() {
-    // FIXME (6): Implement logic to print all bids
-    // for node begin to end iterate
-    for (Node anode : nodes) {
-        Node* currentNode = &anode;
 
+    // Range-based for loop provides simplicity for iterating through a vector
+    for (Node aNode : nodes) {
+        Node* currentNode = &aNode; // We just need a pointer to the memory address of each node
+
+        // If the key is not equal to UINT_MAX
         if (currentNode->key != UINT_MAX) {
             cout << currentNode->key << ": " << currentNode->bid.bidId << " | "
                 << currentNode->bid.title << " | " << currentNode->bid.amount << " | "
                  << currentNode->bid.fund << endl;
         }
 
+        // Cycle through the nodes until the final one
         while (currentNode->next != nullptr) {
-            currentNode = currentNode->next;
             cout << currentNode->key << ": " << currentNode->bid.bidId << " | "
                  << currentNode->bid.title << " | " << currentNode->bid.amount << " | "
                  << currentNode->bid.fund << endl;
+            currentNode = currentNode->next; // Node is equal to the next one
         }
 
     }
-    //   if key not equal to UINT_MAx
-    // output key, bidID, title, amount and fund
-    // node is equal to next iter
-    // while node not equal to nullptr
-    // output key, bidID, title, amount and fund
-    // node is equal to next node
-
 }
 
 /**
@@ -211,11 +205,10 @@ void HashTable::PrintAll() {
  * @param bidId The bid id to search for
  */
 void HashTable::Remove(string bidId) {
-    // FIXME (7): Implement logic to remove a bid
-    // set key equal to hash atoi bidID cstring
-    unsigned key = hash(atoi(bidId.c_str()));
+    // set key equal to bidID converted to integer using C++11 stoi()
+    unsigned key = hash(stoi(bidId));
 
-    // erase node begin and key
+    // Erases the node
     nodes.erase(nodes.begin() + key); // Offset, beginning of node plus offset
 }
 
@@ -227,10 +220,8 @@ void HashTable::Remove(string bidId) {
 Bid HashTable::Search(string bidId) {
     Bid bid;
 
-    // FIXME (8): Implement logic to search for and return a bid
-
-    // create the key for the given bid
-    unsigned key = hash(atoi(bidId.c_str()));
+    // Creates the key for the given bid transformed into an int using C++11 stoi()
+    unsigned key = hash(stoi(bidId));
     // Retrieves node using its key.
     Node* node = &(nodes.at(key)); // oldNode points to the memory address
 
@@ -245,15 +236,12 @@ Bid HashTable::Search(string bidId) {
 
     // Walk the linked list to find the match
     while (node != nullptr) {
+        // Current node matches the node/key
         if (node->key != UINT_MAX && node->bid.bidId.compare(bidId) == 0) {
             return node->bid;
         }
         node = node->next;
     }
-    // return bid
-    // while node not equal to nullptr
-    // if the current node matches, return it
-    //node is equal to next node
 
     return bid;
 }
@@ -279,13 +267,13 @@ void displayBid(Bid bid) {
  * @param csvPath the path to the CSV file to load
  * @return a container holding all the bids read
  */
-void loadBids(string csvPath, HashTable* hashTable) {
+void loadBids(const string& csvPath, HashTable* hashTable) {
     cout << "Loading CSV file " << csvPath << endl;
 
-    // initialize the CSV Parser using the given path
+    // Initializes the CSV Parser using the given path
     csv::Parser file = csv::Parser(csvPath);
 
-    // read and display header row - optional
+    // Reads and displays the header row - optional
     vector<string> header = file.getHeader();
     for (auto const& c : header) {
         cout << c << " | ";
@@ -293,19 +281,17 @@ void loadBids(string csvPath, HashTable* hashTable) {
     cout << "" << endl;
 
     try {
-        // loop to read rows of a CSV file
+        // Loops to read rows of a CSV file
         for (unsigned int i = 0; i < file.rowCount(); i++) {
 
-            // Create a data structure and add to the collection of bids
+            // Creates a data structure and add to the collection of bids
             Bid bid;
             bid.bidId = file[i][1];
             bid.title = file[i][0];
             bid.fund = file[i][8];
             bid.amount = strToDouble(file[i][4], '$');
 
-            //cout << "Item: " << bid.title << ", Fund: " << bid.fund << ", Amount: " << bid.amount << endl;
-
-            // push this bid to the end
+            // Pushes this bid to the end
             hashTable->Insert(bid);
         }
     } catch (csv::Error &e) {
@@ -347,12 +333,12 @@ void displayTelemetry(clock_t ticks) {
  * @param argv - vector with the actual command line arguments
  */
 string processCommandLine(int argc, char* argv[]) {
-    // process command line arguments
+    // Process command line arguments
     string csvPath;
     switch (argc) {
         case 2:
             csvPath = argv[1];
-            //bidKey = "98109";
+            //searchValue = "98109";
             break;
 
         default:
@@ -363,27 +349,16 @@ string processCommandLine(int argc, char* argv[]) {
 }
 
 /**
- * The one and only main() method
+ * Creates Hash Table to hold bids, displays a main menu and loads/displays bids pulled from the
+ * CSV file. Depending on user choice, it will allow a user to load the bids from a CSV file, search for a bid,
+ * or remove a bid.
+ *
+ * @param path - a string containing the path where the csv file can be found.
  */
-int main(int argc, char* argv[]) {
+void mainMenu(const string &path) {
 
-    // process command line arguments
-    string csvPath, searchValue;
-    switch (argc) {
-        case 2:
-            csvPath = argv[1];
-            searchValue = "98010";
-            break;
-        case 3:
-            csvPath = argv[1];
-            searchValue = argv[2];
-            break;
-        default:
-            csvPath = "/Users/abaires/SNHU-CS-300/HashTable/eBid_Monthly_Sales_Dec_2016.csv";
-            searchValue = "98010";
-    }
-
-    // Define a timer variable
+    const string &csvPath = path;
+    string searchValue = {};
     clock_t ticks;
 
     // Define a hash table to hold all the bids
@@ -404,9 +379,7 @@ int main(int argc, char* argv[]) {
         cin >> choice;
 
         switch (choice) {
-
             case 1:
-
                 // Initialize a timer variable before loading bids
                 ticks = clock();
 
@@ -414,9 +387,7 @@ int main(int argc, char* argv[]) {
                 loadBids(csvPath, bidTable);
 
                 // Calculate elapsed time and display result
-                ticks = clock() - ticks; // current clock ticks minus starting clock ticks
-                cout << "time: " << ticks << " clock ticks" << endl;
-                cout << "time: " << ticks * 1.0 / CLOCKS_PER_SEC << " seconds" << endl;
+                displayTelemetry(ticks);
                 break;
 
             case 2:
@@ -424,11 +395,13 @@ int main(int argc, char* argv[]) {
                 break;
 
             case 3:
+                // Added user input to search by bid id
+                cout << "Enter bid ID:" << endl;
+                cin >> searchValue;
+
                 ticks = clock();
 
                 bid = bidTable->Search(searchValue);
-
-                ticks = clock() - ticks; // current clock ticks minus starting clock ticks
 
                 if (!bid.bidId.empty()) {
                     displayBid(bid);
@@ -436,17 +409,42 @@ int main(int argc, char* argv[]) {
                     cout << "Bid Id " << searchValue << " not found." << endl;
                 }
 
-                cout << "time: " << ticks << " clock ticks" << endl;
-                cout << "time: " << ticks * 1.0 / CLOCKS_PER_SEC << " seconds" << endl;
+                displayTelemetry(ticks);
                 break;
 
             case 4:
-                bidTable->Remove(searchValue);
+                // Added user input to search by custom bid id
+                cout << "Enter bid ID to remove:" << endl;
+                cin >> searchValue;
+
+                // Search function called for input validation.
+                bid = bidTable->Search(searchValue);
+
+                // Removal now only occurs if the value exists!
+                if (!bid.bidId.empty()) {
+                    bidTable->Remove(searchValue);
+                    cout << searchValue << " removed." << endl;
+                }
+                else {
+                    cout << searchValue << " not found." << endl;
+                    cout << "Returning to Menu..." << endl;
+                }
+                break;
+
+            default:
+                cout << "Goodbye." << endl;
                 break;
         }
     }
+}
 
-    cout << "Goodbye." << endl;
-
+/**
+ * The one and only main() method
+ *
+ * @param arg[1] path to CSV file to load from (optional)
+ * @param arg[2] the bid Id to use when searching the list (optional)
+ */
+int main(int argc, char* argv[]) {
+    mainMenu(processCommandLine(argc, argv));
     return 0;
 }
