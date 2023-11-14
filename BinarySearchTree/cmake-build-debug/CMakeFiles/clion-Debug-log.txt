@@ -1,0 +1,4 @@
+"/Users/abaires/Library/Application Support/JetBrains/Toolbox/apps/CLion/ch-0/232.9921.42/CLion.app/Contents/bin/cmake/mac/bin/cmake" -DCMAKE_BUILD_TYPE=Debug "-DCMAKE_MAKE_PROGRAM=/Users/abaires/Library/Application Support/JetBrains/Toolbox/apps/CLion/ch-0/232.9921.42/CLion.app/Contents/bin/ninja/mac/ninja" -G Ninja -S /Users/abaires/SNHU-CS-300/BinarySearchTree -B /Users/abaires/SNHU-CS-300/BinarySearchTree/cmake-build-debug
+-- Configuring done (0.0s)
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/abaires/SNHU-CS-300/BinarySearchTree/cmake-build-debug
