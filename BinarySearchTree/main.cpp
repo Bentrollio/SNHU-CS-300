@@ -84,8 +84,7 @@ public:
  * Default constructor
  */
 BinarySearchTree::BinarySearchTree() {
-    // FixMe (1): initialize housekeeping variables
-    //root is equal to nullptr
+    // Initialize root as null pointer
     root = nullptr;
 }
 
@@ -100,17 +99,16 @@ BinarySearchTree::~BinarySearchTree() {
  * Traverse the tree in order
  */
 void BinarySearchTree::InOrder() {
-    // FixMe (2): In order root
+    // Calls inOrder function with root as argument
     this->inOrder(root);
-    // call inOrder fuction and pass root
+
 }
 
 /**
  * Traverse the tree in post-order
  */
 void BinarySearchTree::PostOrder() {
-    // FixMe (3): Post order root
-    // postOrder root
+    // Calls postOrder function with root as argument
     this->postOrder(root);
 }
 
@@ -118,8 +116,7 @@ void BinarySearchTree::PostOrder() {
  * Traverse the tree in pre-order
  */
 void BinarySearchTree::PreOrder() {
-    // FixMe (4): Pre order root
-    // preOrder root
+    // Calls preOrder function with root as argument
     this->preOrder(root);
 }
 
@@ -127,24 +124,20 @@ void BinarySearchTree::PreOrder() {
  * Insert a bid
  */
 void BinarySearchTree::Insert(Bid bid) {
-    // FIXME (5) Implement inserting a bid into the tree
-    // if root equal to null ptr aka. nothing in tree
+    // If the tree is empty, this node is the root.
     if (root == nullptr) {
         root = new Node(bid);
     }
-    // root is equal to new node bid
+    // Otherwise, call the add node function with the root and new bid
     else {
         this->addNode(root, bid);
     }
-    // else
-    // add Node root and bid
 }
 
 /**
  * Remove a bid
  */
 void BinarySearchTree::Remove(string bidId) {
-    // FIXME (6) Implement removing a bid from the tree
     // remove node root bidID
     this->removeNode(root, bidId);
 }
@@ -153,22 +146,21 @@ void BinarySearchTree::Remove(string bidId) {
  * Search for a bid
  */
 Bid BinarySearchTree::Search(string bidId) {
-    // FIXME (7) Implement searching the tree for a bid
-    // set current node equal to root
-    // Start searching from the root
+    // Sets current node equal to root
+    // Starts searching from the root
     Node* current = root;
 
-    // keep looping downwards until bottom reached or matching bidId found
+    // Keeps looping downwards until bottom reached or matching bidId found
     while (current != nullptr) {
-        // if match found, return current bid
+        // Base case: We found a matching bid
         if (current->bid.bidId.compare(bidId) == 0) {
             return current->bid;
         }
-        // if bid is smaller than current node, then traverse left
+        // If bid is smaller than current node, then traverse left
         if (bidId.compare(current->bid.bidId) < 0) {
             current = current->left;
         }
-        // else larger so traverse right
+        // Otherwise, the value is greater than the current node, Traverse right.
         else {
             current = current->right;
         }
@@ -186,42 +178,38 @@ Bid BinarySearchTree::Search(string bidId) {
  * @param bid Bid to be added
  */
 void BinarySearchTree::addNode(Node* node, Bid bid) {
-    // FIXME (8) Implement inserting a bid into the tree
     // if node is larger than the bid, add to left subtree
     if (node->bid.bidId.compare(bid.bidId) > 0) {
+        // Base case: If the left child does not exist, insert the new bid as the left child
         if (node->left == nullptr) {
             node->left = new Node(bid);
         }
+        // If it already has a left child, we recursively call addNode
+        // to search for a spot for the new bid
         else {
             this->addNode(node->left, bid);
         }
     }
-    // add to right subtree
+    // Add to right subtree
     else {
+        // Base case: If the right child does not exist, insert the new bid as the right child
         if (node->right == nullptr) {
             node->right = new Node(bid);
         }
+        // If it already has a right child, we recursively call addNode
+        // to search for a spot for the new bid
         else {
             this->addNode(node->right, bid);
         }
 
     }
-    // if no left node
-    // this node becomes left
-    // else recurse down the left node
-    // else
-    // if no right node
-    // this node becomes right
-    //else
-    // recurse down the left node
 }
 
 Node* BinarySearchTree::removeNode(Node* node, string bidId) {
-    // If this node is null, then return
+    // Base case: Bottom of the tree, parent has no children
     if (node == nullptr) {
         return node;
     }
-
     // Recurse down the left subtree (node smaller than bid)
     if (bidId.compare(node->bid.bidId) < 0) {
         node->left = removeNode(node->left, bidId);
@@ -261,46 +249,29 @@ Node* BinarySearchTree::removeNode(Node* node, string bidId) {
     return node;
 }
 void BinarySearchTree::inOrder(Node* node) {
-    // FixMe (9): Pre order root
-
-    //if node is not equal to null ptr
     if (node != nullptr) {
         inOrder(node->left);
         cout << node->bid.bidId << ": " << node->bid.title << " | " << node->bid.amount << " | "
              << node->bid.fund << endl;
         inOrder(node->right);
     }
-    //InOrder not left
-    //output bidID, title, amount, fund
-    //InOder right
 }
 void BinarySearchTree::postOrder(Node* node) {
-    // FixMe (10): Pre order root
-    //if node is not equal to null ptr
     if (node != nullptr) {
         postOrder(node->left);
         postOrder(node->right);
         cout << node->bid.bidId << ": " << node->bid.title << " | " << node->bid.amount << " | "
              << node->bid.fund << endl;
     }
-    //postOrder left
-    //postOrder right
-    //output bidID, title, amount, fund
-
 }
 
 void BinarySearchTree::preOrder(Node* node) {
-    // FixMe (11): Pre order root
-    //if node is not equal to null ptr
     if (node != nullptr) {
         cout << node->bid.bidId << ": " << node->bid.title << " | " << node->bid.amount << " | "
              << node->bid.fund << endl;
         preOrder(node->left);
         preOrder(node->right);
     }
-    //output bidID, title, amount, fund
-    //postOrder left
-    //postOrder right
 }
 
 //============================================================================
@@ -372,27 +343,52 @@ double strToDouble(string str, char ch) {
 }
 
 /**
- * The one and only main() method
+ * Displays elapsed time and ticks
+ *
+ * @param ticks - The starting clock ticks defined as clock_t type
  */
-int main(int argc, char* argv[]) {
+void displayTelemetry(clock_t ticks) {
+    // Calculates the elapsed time and displays the result.
+    ticks = clock() - ticks; // current clock ticks minus starting clock ticks.
+    cout << "time: " << ticks << " clock ticks" << endl;
+    cout << "time: " << ticks * 1.0 / CLOCKS_PER_SEC << " seconds" << endl;
+}
 
-    // process command line arguments
-    string csvPath, bidKey;
+/**
+ *
+ * Handles and checks command-line arguments during execution and stores the csv file path into a variable
+ * for the mainMenu() function to utilize when it calls loadBids().
+ *
+ * @param argc - number of command line arguments
+ * @param argv - vector with the actual command line arguments
+ */
+string processCommandLine(int argc, char* argv[]) {
+    // Process command line arguments
+    string csvPath;
     switch (argc) {
         case 2:
             csvPath = argv[1];
-            bidKey = "98022";
+            //searchValue = "98109";
             break;
-        case 3:
-            csvPath = argv[1];
-            bidKey = argv[2];
-            break;
+
         default:
             csvPath = "/Users/abaires/SNHU-CS-300/BinarySearchTree/eBid_Monthly_Sales_Dec_2016.csv";
-            bidKey = "98022";
+            break;
     }
+    return csvPath;
+}
 
-    // Define a timer variable
+/**
+ * Creates Binary Search Tree to hold bids, displays a main menu and loads/displays bids pulled from the
+ * CSV file. Depending on user choice, it will allow a user to load the bids from a CSV file, search for a bid,
+ * or remove a bid.
+ *
+ * @param path - a string containing the path where the csv file can be found.
+ */
+void mainMenu(const string &path) {
+
+    const string &csvPath = path;
+    string bidKey = {};
     clock_t ticks;
 
     // Define a binary search tree to hold all bids
@@ -424,9 +420,7 @@ int main(int argc, char* argv[]) {
                 //cout << bst->Size() << " bids read" << endl;
 
                 // Calculate elapsed time and display result
-                ticks = clock() - ticks; // current clock ticks minus starting clock ticks
-                cout << "time: " << ticks << " clock ticks" << endl;
-                cout << "time: " << ticks * 1.0 / CLOCKS_PER_SEC << " seconds" << endl;
+                displayTelemetry(ticks);
                 break;
 
             case 2:
@@ -434,11 +428,13 @@ int main(int argc, char* argv[]) {
                 break;
 
             case 3:
+                // Added user input to search by bid id
+                cout << "Enter bid ID:" << endl;
+                cin >> bidKey;
+
                 ticks = clock();
 
                 bid = bst->Search(bidKey);
-
-                ticks = clock() - ticks; // current clock ticks minus starting clock ticks
 
                 if (!bid.bidId.empty()) {
                     displayBid(bid);
@@ -446,18 +442,39 @@ int main(int argc, char* argv[]) {
                     cout << "Bid Id " << bidKey << " not found." << endl;
                 }
 
-                cout << "time: " << ticks << " clock ticks" << endl;
-                cout << "time: " << ticks * 1.0 / CLOCKS_PER_SEC << " seconds" << endl;
-
+                displayTelemetry(ticks);
                 break;
 
             case 4:
-                bst->Remove(bidKey);
+                cout << "Enter bid ID to remove:" << endl;
+                cin >> bidKey;
+
+                // Search function called for input validation
+                bid = bst->Search(bidKey);
+
+                // Removal now only occurs if the value exists!
+                if(!bid.bidId.empty()) {
+                    bst->Remove(bidKey);
+                    cout << bidKey << " removed." << endl;
+                }
+                else {
+                    cout << bidKey << " not found." << endl;
+                    cout << "Returning to Menu..." << endl;
+                }
                 break;
         }
     }
-
     cout << "Goodbye." << endl;
+}
 
+
+/**
+ * The one and only main() method
+ *
+ * @param arg[1] path to CSV file to load from (optional)
+ * @param arg[2] the bid Id to use when searching the list (optional)
+ */
+int main(int argc, char* argv[]) {
+    mainMenu(processCommandLine(argc, argv));
     return 0;
 }
