@@ -1,9 +1,9 @@
 //============================================================================
 // Name        : BinarySearchTree.cpp
-// Author      : JYour name
+// Author      : Alex Baires
 // Version     : 1.0
 // Copyright   : Copyright © 2017 SNHU COCE
-// Description : Hello World in C++, Ansi-style
+// Description : Module 5: Binary Search Tree Assignment
 //============================================================================
 
 #include <iostream>
@@ -43,10 +43,9 @@ struct Node {
         right = nullptr;
     }
 
-    // initialize with a bid
-    Node(Bid aBid) :
-            Node() {
-        bid = aBid;
+    // initialize with a given bid
+    Node(Bid aBid) : Node() {
+        this->bid = aBid;
     }
 };
 
@@ -66,11 +65,16 @@ private:
     void addNode(Node* node, Bid bid);
     void inOrder(Node* node);
     Node* removeNode(Node* node, string bidId);
+    void postOrder(Node* node);
+    void preOrder(Node* node);
+
 
 public:
     BinarySearchTree();
     virtual ~BinarySearchTree();
     void InOrder();
+    void PostOrder();
+    void PreOrder();
     void Insert(Bid bid);
     void Remove(string bidId);
     Bid Search(string bidId);
@@ -82,6 +86,7 @@ public:
 BinarySearchTree::BinarySearchTree() {
     // FixMe (1): initialize housekeeping variables
     //root is equal to nullptr
+    root = nullptr;
 }
 
 /**
@@ -96,6 +101,7 @@ BinarySearchTree::~BinarySearchTree() {
  */
 void BinarySearchTree::InOrder() {
     // FixMe (2): In order root
+    this->inOrder(root);
     // call inOrder fuction and pass root
 }
 
@@ -105,6 +111,7 @@ void BinarySearchTree::InOrder() {
 void BinarySearchTree::PostOrder() {
     // FixMe (3): Post order root
     // postOrder root
+    this->postOrder(root);
 }
 
 /**
@@ -113,6 +120,7 @@ void BinarySearchTree::PostOrder() {
 void BinarySearchTree::PreOrder() {
     // FixMe (4): Pre order root
     // preOrder root
+    this->preOrder(root);
 }
 
 /**
@@ -120,8 +128,14 @@ void BinarySearchTree::PreOrder() {
  */
 void BinarySearchTree::Insert(Bid bid) {
     // FIXME (5) Implement inserting a bid into the tree
-    // if root equarl to null ptr
+    // if root equal to null ptr aka. nothing in tree
+    if (root == nullptr) {
+        root = new Node(bid);
+    }
     // root is equal to new node bid
+    else {
+        this->addNode(root, bid);
+    }
     // else
     // add Node root and bid
 }
@@ -132,6 +146,7 @@ void BinarySearchTree::Insert(Bid bid) {
 void BinarySearchTree::Remove(string bidId) {
     // FIXME (6) Implement removing a bid from the tree
     // remove node root bidID
+    this->removeNode(root, bidId);
 }
 
 /**
@@ -140,12 +155,26 @@ void BinarySearchTree::Remove(string bidId) {
 Bid BinarySearchTree::Search(string bidId) {
     // FIXME (7) Implement searching the tree for a bid
     // set current node equal to root
+    // Start searching from the root
+    Node* current = root;
 
     // keep looping downwards until bottom reached or matching bidId found
-    // if match found, return current bid
+    while (current != nullptr) {
+        // if match found, return current bid
+        if (current->bid.bidId.compare(bidId) == 0) {
+            return current->bid;
+        }
+        // if bid is smaller than current node, then traverse left
+        if (bidId.compare(current->bid.bidId) < 0) {
+            current = current->left;
+        }
+        // else larger so traverse right
+        else {
+            current = current->right;
+        }
+    }
 
-    // if bid is smaller than current node then traverse left
-    // else larger so traverse right
+    // Returns an empty bid because it was not found in left/right nodes
     Bid bid;
     return bid;
 }
@@ -158,7 +187,25 @@ Bid BinarySearchTree::Search(string bidId) {
  */
 void BinarySearchTree::addNode(Node* node, Bid bid) {
     // FIXME (8) Implement inserting a bid into the tree
-    // if node is larger then add to left
+    // if node is larger than the bid, add to left subtree
+    if (node->bid.bidId.compare(bid.bidId) > 0) {
+        if (node->left == nullptr) {
+            node->left = new Node(bid);
+        }
+        else {
+            this->addNode(node->left, bid);
+        }
+    }
+    // add to right subtree
+    else {
+        if (node->right == nullptr) {
+            node->right = new Node(bid);
+        }
+        else {
+            this->addNode(node->right, bid);
+        }
+
+    }
     // if no left node
     // this node becomes left
     // else recurse down the left node
@@ -168,9 +215,61 @@ void BinarySearchTree::addNode(Node* node, Bid bid) {
     //else
     // recurse down the left node
 }
+
+Node* BinarySearchTree::removeNode(Node* node, string bidId) {
+    // If this node is null, then return
+    if (node == nullptr) {
+        return node;
+    }
+
+    // Recurse down the left subtree (node smaller than bid)
+    if (bidId.compare(node->bid.bidId) < 0) {
+        node->left = removeNode(node->left, bidId);
+    }
+    // Recurse down the right subtree (node bigger than bid)
+    else if ((bidId.compare(node->bid.bidId) > 0)) {
+        node->right = removeNode(node->right, bidId);
+    }
+    else {
+        // Leaf node with no children
+        if (node->left == nullptr && node->right == nullptr) {
+            delete node;
+            node = nullptr;
+        }
+        // One child to the left
+        else if (node->left != nullptr && node->right == nullptr) {
+            Node* temp = node; // Temporary node pointer to copy the node
+            node = node->left;
+            delete temp;
+        }
+        // One child to the right
+        else if (node->right != nullptr && node->left == nullptr) {
+            Node *temp = node; // Temporary node pointer to copy the node
+            node = node->right;
+            delete temp;
+        }
+        // Two children
+        else {
+            Node* temp = node->right;
+            while (temp->left != nullptr) {
+                temp = temp->left;
+            }
+            node->bid = temp->bid;
+            node->right = removeNode(node->right, temp->bid.bidId);
+        }
+    }
+    return node;
+}
 void BinarySearchTree::inOrder(Node* node) {
     // FixMe (9): Pre order root
+
     //if node is not equal to null ptr
+    if (node != nullptr) {
+        inOrder(node->left);
+        cout << node->bid.bidId << ": " << node->bid.title << " | " << node->bid.amount << " | "
+             << node->bid.fund << endl;
+        inOrder(node->right);
+    }
     //InOrder not left
     //output bidID, title, amount, fund
     //InOder right
@@ -178,6 +277,12 @@ void BinarySearchTree::inOrder(Node* node) {
 void BinarySearchTree::postOrder(Node* node) {
     // FixMe (10): Pre order root
     //if node is not equal to null ptr
+    if (node != nullptr) {
+        postOrder(node->left);
+        postOrder(node->right);
+        cout << node->bid.bidId << ": " << node->bid.title << " | " << node->bid.amount << " | "
+             << node->bid.fund << endl;
+    }
     //postOrder left
     //postOrder right
     //output bidID, title, amount, fund
@@ -187,6 +292,12 @@ void BinarySearchTree::postOrder(Node* node) {
 void BinarySearchTree::preOrder(Node* node) {
     // FixMe (11): Pre order root
     //if node is not equal to null ptr
+    if (node != nullptr) {
+        cout << node->bid.bidId << ": " << node->bid.title << " | " << node->bid.amount << " | "
+             << node->bid.fund << endl;
+        preOrder(node->left);
+        preOrder(node->right);
+    }
     //output bidID, title, amount, fund
     //postOrder left
     //postOrder right
@@ -270,15 +381,15 @@ int main(int argc, char* argv[]) {
     switch (argc) {
         case 2:
             csvPath = argv[1];
-            bidKey = "98109";
+            bidKey = "98022";
             break;
         case 3:
             csvPath = argv[1];
             bidKey = argv[2];
             break;
         default:
-            csvPath = "eBid_Monthly_Sales_Dec_2016.csv";
-            bidKey = "98109";
+            csvPath = "/Users/abaires/SNHU-CS-300/BinarySearchTree/eBid_Monthly_Sales_Dec_2016.csv";
+            bidKey = "98022";
     }
 
     // Define a timer variable
@@ -346,7 +457,7 @@ int main(int argc, char* argv[]) {
         }
     }
 
-    cout << "Good bye." << endl;
+    cout << "Goodbye." << endl;
 
     return 0;
 }
