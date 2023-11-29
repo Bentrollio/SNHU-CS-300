@@ -2,15 +2,91 @@
 * PROJECT TWO
 */
 
+#include <fstream>
 #include <iostream>
-#include <regex>
+#include <sstream>
 #include <string>
 #include <vector>
 
 using namespace std;
 
 void loadCourses(const string& filePath) {
-    cout << "Load  Courses function" << endl; // FIXME load courses from csv
+    vector<string> courseParameters = {};
+    vector<string> tokens = {};
+    ifstream courseData;
+    courseData.open(filePath, ios::in);
+    int iteration = {};
+
+    if (courseData.is_open()) {
+        cout << "File successfully opened. Course List:" << endl;
+        string line;
+        string word;
+
+        while (courseData.good()) {
+            getline(courseData, line);
+            stringstream courseStream(line);
+            while (getline(courseStream, word, ',')) {
+                tokens.push_back(word);
+            }
+            if (tokens.size() < 2) {
+                cout << "ERROR: Course line does not have at least 2 parameters." << endl;
+                break;
+            }
+            if (tokens.size() > 2) {
+                for (size_t i = 2; i < tokens.size(); ++i) {
+                    vector<string> temp = {};
+                    string preReq = tokens.at(i);
+                    string moreLine; //FIXME rename variable
+                    ifstream courseData2(filePath);
+                    while (getline(courseData2, moreLine)) {
+                        istringstream iss(moreLine);
+                        string firstWord, secondWord, thirdWord;
+
+                        if (getline(iss, firstWord, ',') && getline(iss, secondWord, ',') && getline(iss, thirdWord, ',')) {
+                            if (firstWord == preReq) {
+                                cout << "MATCH FOUND " << moreLine << endl;
+                            }
+                            else {
+                                cerr << "whoops" << moreLine << endl;
+                            }
+
+
+//                        istringstream courseStream2(moreLine);
+//                        string firstWord;
+//                        getline(courseStream2, firstWord, ',');
+//                        temp.push_back(firstWord);
+//                        cout << temp.size() << endl;
+//                        for (const auto& w : temp) {
+//                            cout << w << " ";
+                        }
+
+//                        for(const auto& w : temp) {
+//                            cout << w << " ";
+//                        }
+                        //temp.clear();
+
+
+//                        cout << "PREREQ SEARCHED: " << preReq << endl;
+//                        cout << firstWord << "--";
+                    }
+                    courseData2.close();
+                    //temp.clear();
+                }
+                ++iteration; // FIXME Remove iteration variable.
+                cout << "Iteration number: " << iteration << endl;
+            }
+            cout << endl;
+            cout << "VECTOR SIZE: " << tokens.size() << endl;
+            tokens.clear();
+            cout << endl;
+        }
+
+        cout << "End of file reached. Closing it now..." << endl;
+        courseData.close();
+    }
+    else {
+        cout << "File could not found. Check directory" << endl;
+    }
 }
 
 void printCourseList(const string& filePath) {//FIXME change arguments to tree
@@ -43,7 +119,7 @@ void mainMenu(const string &path) {
 
         switch (userInput) {
             case 1:
-                loadCourses("test");
+                loadCourses(path);
                 break;
             case 2:
                 printCourseList("test");
