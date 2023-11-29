@@ -25,6 +25,7 @@ void loadCourses(const string& filePath) {
         while (courseData.good()) {
             getline(courseData, line);
             stringstream courseStream(line);
+            tokens.clear();
             while (getline(courseStream, word, ',')) {
                 tokens.push_back(word);
             }
@@ -44,15 +45,16 @@ void loadCourses(const string& filePath) {
                     while (verifyCourseData.good()) {
                         getline(verifyCourseData, verifyLine);
                         stringstream verifyCourseStream(verifyLine);
+                        temp.clear();
                         while (getline(verifyCourseStream, verifyWord, ',')) {
                             temp.push_back(verifyWord);
                         }
                         cout << "FIRST ELEMENT of LINE: " << temp.at(0) << endl;
                         cout << "TOKENS VECTOR" << endl;
                         cout << tokens.at(i) << endl;
-
-
-                        temp.clear();
+                        if (tokens.at(i).compare(temp.at(0)) == 0){
+                            cout << "MATCH FOUND" << endl;
+                        }
                     }
                     verifyCourseData.close();
                 }
@@ -61,7 +63,6 @@ void loadCourses(const string& filePath) {
             }
             cout << endl;
             cout << "VECTOR SIZE: " << tokens.size() << endl;
-            tokens.clear();
             cout << endl;
         }
 
