@@ -35,37 +35,20 @@ void loadCourses(const string& filePath) {
             }
             if (tokens.size() > 2) {
                 for (size_t i = 2; i < tokens.size(); ++i) {
-                    vector<string> temp = {};
-                    //string preReq = tokens.at(i);
-                    cout << "PREREQ TESTED: "<< tokens.at(i) << endl;
-                    string verifyLine;
-                    string verifyWord;
-                    ifstream verifyCourseData;
-                    verifyCourseData.open(filePath, ios::in);
-                    while (verifyCourseData.good()) {
-                        getline(verifyCourseData, verifyLine);
-                        stringstream verifyCourseStream(verifyLine);
-                        temp.clear();
-                        while (getline(verifyCourseStream, verifyWord, ',')) {
-                            temp.push_back(verifyWord);
-                        }
-                        cout << "FIRST ELEMENT of LINE: " << temp.at(0) << endl;
-                        cout << "TOKENS VECTOR" << endl;
-                        cout << tokens.at(i) << endl;
-                        if (tokens.at(i).compare(temp.at(0)) == 0){
-                            cout << "MATCH FOUND" << endl;
-                        }
-                    }
-                    verifyCourseData.close();
+                    cout << "Prerequsite course " << tokens.at(i) << endl;
                 }
                 ++iteration; // FIXME Remove iteration variable.
                 cout << "Iteration number: " << iteration << endl;
             }
             cout << endl;
             cout << "VECTOR SIZE: " << tokens.size() << endl;
+            courseParameters.push_back(tokens.at(0));
             cout << endl;
+            cout << "List of courses..." << endl;
+            for (const auto& w : courseParameters) {
+                cout << w << " " << endl;
+            }
         }
-
         cout << "End of file reached. Closing it now..." << endl;
         courseData.close();
     }
