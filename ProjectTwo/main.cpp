@@ -47,24 +47,14 @@ void loadCourses(const string& filePath) {
                         while (getline(verifyCourseStream, verifyWord, ',')) {
                             temp.push_back(verifyWord);
                         }
-                        cout << temp.at(0) << endl;
+                        cout << "FIRST ELEMENT of LINE: " << temp.at(0) << endl;
+                        cout << "TOKENS VECTOR" << endl;
+                        cout << tokens.at(i) << endl;
+
 
                         temp.clear();
-
-//                        if(temp.at(0) == preReq) {
-//                            cout << preReq << " is found in course catalog" << endl;
-//                        }
                     }
                     verifyCourseData.close();
- //                   ifstream courseData2(filePath);
-//                    while (getline(courseData2, moreLine)) {
-//                        istringstream iss(moreLine);
-//                        string firstWord, secondWord, thirdWord;
-//
-//
-//                    }
-  //                  courseData2.close();
-                    //temp.clear();
                 }
                 ++iteration; // FIXME Remove iteration variable.
                 cout << "Iteration number: " << iteration << endl;
