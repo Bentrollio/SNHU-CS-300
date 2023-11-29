@@ -35,41 +35,35 @@ void loadCourses(const string& filePath) {
             if (tokens.size() > 2) {
                 for (size_t i = 2; i < tokens.size(); ++i) {
                     vector<string> temp = {};
-                    string preReq = tokens.at(i);
-                    string moreLine; //FIXME rename variable
-                    ifstream courseData2(filePath);
-                    while (getline(courseData2, moreLine)) {
-                        istringstream iss(moreLine);
-                        string firstWord, secondWord, thirdWord;
-
-                        if (getline(iss, firstWord, ',') && getline(iss, secondWord, ',') && getline(iss, thirdWord, ',')) {
-                            if (firstWord == preReq) {
-                                cout << "MATCH FOUND " << moreLine << endl;
-                            }
-                            else {
-                                cerr << "whoops" << moreLine << endl;
-                            }
-
-
-//                        istringstream courseStream2(moreLine);
-//                        string firstWord;
-//                        getline(courseStream2, firstWord, ',');
-//                        temp.push_back(firstWord);
-//                        cout << temp.size() << endl;
-//                        for (const auto& w : temp) {
-//                            cout << w << " ";
+                    //string preReq = tokens.at(i);
+                    cout << "PREREQ TESTED: "<< tokens.at(i) << endl;
+                    string verifyLine;
+                    string verifyWord;
+                    ifstream verifyCourseData;
+                    verifyCourseData.open(filePath, ios::in);
+                    while (verifyCourseData.good()) {
+                        getline(verifyCourseData, verifyLine);
+                        stringstream verifyCourseStream(verifyLine);
+                        while (getline(verifyCourseStream, verifyWord, ',')) {
+                            temp.push_back(verifyWord);
                         }
+                        cout << temp.at(0) << endl;
 
-//                        for(const auto& w : temp) {
-//                            cout << w << " ";
+                        temp.clear();
+
+//                        if(temp.at(0) == preReq) {
+//                            cout << preReq << " is found in course catalog" << endl;
 //                        }
-                        //temp.clear();
-
-
-//                        cout << "PREREQ SEARCHED: " << preReq << endl;
-//                        cout << firstWord << "--";
                     }
-                    courseData2.close();
+                    verifyCourseData.close();
+ //                   ifstream courseData2(filePath);
+//                    while (getline(courseData2, moreLine)) {
+//                        istringstream iss(moreLine);
+//                        string firstWord, secondWord, thirdWord;
+//
+//
+//                    }
+  //                  courseData2.close();
                     //temp.clear();
                 }
                 ++iteration; // FIXME Remove iteration variable.
