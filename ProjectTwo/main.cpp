@@ -10,51 +10,93 @@
 
 using namespace std;
 
-void loadCourses(const string& filePath) {
-    vector<string> courseParameters = {};
+vector <string> loadDefaultCourseList(const string& filePath) {
+    vector<string> defaultCourses = {};
+    vector<string> temp = {};
+    ifstream courseData;
+    courseData.open(filePath, ios::in);
+
+    if (!courseData.is_open()) {
+        cout << "File could not found. Check directory" << endl;
+        return defaultCourses; // Vector is empty.
+    }
+    cout << "File successfully opened." << endl;
+    string line;
+    string word;
+
+    while (getline(courseData, line)) {
+        stringstream courseStream(line);
+        temp.clear();
+        while (getline(courseStream, word, ',')) {
+
+            // Reading the file gave me the UTF-8 BOM appended to my token.
+            // The below checks each token for the BOM.
+            // Source: https://cplusplus.com/forum/general/111203/
+            if (word.compare(0, 3, "\xEF\xBB\xBF") == 0) {
+                word.erase(0, 3);
+            }
+            temp.push_back(word);
+        }
+        defaultCourses.push_back(temp.at(0));
+    }
+    cout << "End of file reached. Closing it now..." << endl;
+    courseData.close();
+
+    return defaultCourses;
+}
+
+void checkDataIntegrity(const string& filePath) {
+    vector<string> courseParameters = loadDefaultCourseList(filePath);
+    string line;
+    string word;
+    cout << "COURSE LIST" << endl;
+    for (const auto& w : courseParameters) {
+        cout << w << "size: " << w.size() << endl;
+    }
     vector<string> tokens = {};
     ifstream courseData;
     courseData.open(filePath, ios::in);
     int iteration = {};
 
-    if (courseData.is_open()) {
-        cout << "File successfully opened. Course List:" << endl;
-        string line;
-        string word;
-
-        while (courseData.good()) {
-            getline(courseData, line);
-            stringstream courseStream(line);
-            tokens.clear();
-            while (getline(courseStream, word, ',')) {
-                tokens.push_back(word);
+    if (courseData.fail()) {
+        cout << "ERROR: Check file path." << endl;
+        return;
+    }
+    while (getline(courseData, line)) {
+        stringstream courseStream(line);
+        tokens.clear();
+        while (getline(courseStream, word, ',')) {
+            // Reading the file gave me the UTF-8 BOM appended to the first token throwing off the size.
+            // The below checks each token for the BOM and strips it from the string.
+            // Source: https://cplusplus.com/forum/general/111203/
+            if (word.compare(0, 3, "\xEF\xBB\xBF") == 0) {
+                word.erase(0, 3);
             }
-            if (tokens.size() < 2) {
-                cout << "ERROR: Course line does not have at least 2 parameters." << endl;
-                break;
-            }
-            if (tokens.size() > 2) {
-                for (size_t i = 2; i < tokens.size(); ++i) {
-                    cout << "Prerequsite course " << tokens.at(i) << endl;
-                }
-                ++iteration; // FIXME Remove iteration variable.
-                cout << "Iteration number: " << iteration << endl;
-            }
-            cout << endl;
-            cout << "VECTOR SIZE: " << tokens.size() << endl;
-            courseParameters.push_back(tokens.at(0));
-            cout << endl;
-            cout << "List of courses..." << endl;
-            for (const auto& w : courseParameters) {
-                cout << w << " " << endl;
-            }
+            tokens.push_back(word);
         }
-        cout << "End of file reached. Closing it now..." << endl;
-        courseData.close();
+        if (tokens.size() < 2) {
+            cout << "ERROR: Course line incomplete." << endl;
+            break;
+        }
+        if (tokens.size() > 2) {
+            for (size_t i = 2; i < tokens.size(); ++i) {
+                cout << "Prerequisite course " << tokens.at(i) << " size " << tokens.at(i).size() << endl;
+                for (const auto& courses : courseParameters) {
+                    if (courses == tokens.at(i)) {
+                        cout << "Course Param: " << courses << endl;
+                        cout << "Param Match: " << tokens.at(i) << endl;
+                        // FIX ME CALL A STRUCT FUNCTION??
+                    }
+                }
+            }
+            ++iteration; // FIXME Remove this in final product.
+            cout << "Iteration number: " << iteration << endl;
+        }
+        cout << endl;
+        cout << "VECTOR SIZE: " << tokens.size() << endl;
     }
-    else {
-        cout << "File could not found. Check directory" << endl;
-    }
+    cout << "End of file reached. Closing it now." << endl;
+    courseData.close();
 }
 
 void printCourseList(const string& filePath) {//FIXME change arguments to tree
@@ -65,7 +107,7 @@ void printCourse(const string& filePath) { //FIXME search tree for a course
     cout << "Print a specific course!" << endl;
 }
 
-void mainMenu(const string &path) {
+void mainMenu(const string& path) {
     int userInput = {};
 
     while (userInput != 9) {
@@ -87,7 +129,7 @@ void mainMenu(const string &path) {
 
         switch (userInput) {
             case 1:
-                loadCourses(path);
+                checkDataIntegrity(path);
                 break;
             case 2:
                 printCourseList("test");
