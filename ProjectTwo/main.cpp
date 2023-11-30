@@ -1,6 +1,6 @@
 /*
-* PROJECT TWO
-*/
+ * PROJECT TWO
+ */
 
 #include <fstream>
 #include <iostream>
@@ -10,34 +10,110 @@
 
 using namespace std;
 
+// This structure holds course information.
+struct Course {
+    string courseID;
+    string courseName;
+    vector<string> coursePrerequisites;
+
+    // Default constructor.
+    Course() {
+    }
+};
+
+/**
+ * Displays the course information to the console (std::out)
+ *
+ * @param - Course struct containing the course info
+ */
+void displayCourse(Course course) {
+    cout << course.courseID << " - " << course.courseName << endl;
+    cout << "Prerequisites: ";
+    for (const auto& preReq : course.coursePrerequisites) {
+        cout << preReq << " ";
+    }
+    cout << endl;
+    cout << "----------------" << endl;
+}
+
+/**
+ * Builds Course objects by parsing through each element within a string vector nested
+ * inside of a parent vector.
+ *
+ * @param - A vector of string vectors containing course information.
+ * @return - A vector of Course objects.
+ */
+// Pun intended.
+vector<Course> conStructCourses(vector<vector<string>> contents) {
+    vector<Course> courses;
+    // Iterate through each row
+    for (const auto& row : contents) {
+        Course course;
+        // Iterate through the vector within the row of the parent vector.
+        for (size_t i = 0; i < row.size(); ++i) {
+            course.courseID = row.at(0);
+            course.courseName = row.at(1);
+            course.coursePrerequisites = {};
+            // Checks if the course has prerequisites
+            if (!(row.size() > 2)) {
+                course.coursePrerequisites.push_back("No Prerequisites.");
+                break;
+            }
+            // Course has pre-reqs, assigned to coursePrerequisites member vector in course
+            for (size_t j = 2; j < row.size(); ++j) {
+                course.coursePrerequisites.push_back(row.at(j));
+            }
+        }
+        courses.push_back(course);
+    }
+    return courses; // Returns vector of course objects.
+}
+
+string findBOM(string &word) {
+    // Reading the file gave me the UTF-8 BOM appended to my token.
+    // The below checks each token for the BOM.
+    // Source: https://cplusplus.com/forum/general/111203/
+    if (word.compare(0, 3, "\xEF\xBB\xBF") == 0) {
+        word.erase(0, 3);
+    }
+    return word;
+}
+
+/**
+ * Parses through a text or CSV file and creates a vector of default courses
+ * in the course catalog for comparison purposes.
+ *
+ * The function assumes each line in the text file is comma seperated and will
+ * tokenize only the first comma separated word from each line.
+ *
+ * @param - A string containing the path to the text or csv file being parsed
+ * @return - A vector containing a list of CourseIDs parsed from a file.
+ */
 vector <string> loadDefaultCourseList(const string& filePath) {
     vector<string> defaultCourses = {};
     vector<string> temp = {};
+
     ifstream courseData;
     courseData.open(filePath, ios::in);
 
+    // Returns empty vector if file does not open.
     if (!courseData.is_open()) {
-        cout << "File could not found. Check directory" << endl;
-        return defaultCourses; // Vector is empty.
+        return defaultCourses;
     }
     cout << "File successfully opened." << endl;
+
     string line;
     string word;
 
-    while (getline(courseData, line)) {
+    while (getline(courseData, line)) { // Parses through each line in file
         stringstream courseStream(line);
-        temp.clear();
-        while (getline(courseStream, word, ',')) {
+        temp.clear(); // Prepares the temp vector to store a new line
+        while (getline(courseStream, word, ',')) { // Parses through each word stripping comma
 
-            // Reading the file gave me the UTF-8 BOM appended to my token.
-            // The below checks each token for the BOM.
-            // Source: https://cplusplus.com/forum/general/111203/
-            if (word.compare(0, 3, "\xEF\xBB\xBF") == 0) {
-                word.erase(0, 3);
-            }
-            temp.push_back(word);
+            findBOM(word); // Cleans the token
+            temp.push_back(word); // Each word in the line is stored in a temporary vector
         }
-        defaultCourses.push_back(temp.at(0));
+        defaultCourses.push_back(temp.at(0)); // First element is the default course in catalog
     }
     cout << "End of file reached. Closing it now..." << endl;
     courseData.close();
@@ -45,62 +121,77 @@ vector <string> loadDefaultCourseList(const string& filePath) {
     return defaultCourses;
 }
 
-void checkDataIntegrity(const string& filePath) {
+/**
+ * Parses through a text or CSV file, ensuring proper formatting for compatibility
+ * with the program.
+ *
+ * The function checks that each line in the text file is in the below format:
+ *      Course ID, Course name
+ *      OR
+ *      Course ID, Course name, Course Prerequisite 1, Course Prerequisite 2, etc.
+ *
+ * @param - A string containing the path to the text or csv file being parsed.
+ * @return - A vector of vectors that stores each course and its prereqs.
+ */
+vector<vector<string>> checkDataIntegrity(const string& filePath) {
     vector<string> courseParameters = loadDefaultCourseList(filePath);
+
+    if (courseParameters.empty()) { // Error handling for loadDefaultCourseList()
+        cerr << "File could not found. Check directory" << endl; // FIXME Should throw an error + exit
+    }
+
+    vector<string> tokens = {};
+    vector<vector<string>> fileContents = {};
+
     string line;
     string word;
-    cout << "COURSE LIST" << endl;
-    for (const auto& w : courseParameters) {
-        cout << w << "size: " << w.size() << endl;
-    }
-    vector<string> tokens = {};
+
     ifstream courseData;
     courseData.open(filePath, ios::in);
-    int iteration = {};
 
     if (courseData.fail()) {
         cout << "ERROR: Check file path." << endl;
-        return;
+        return fileContents; // Returns empty vector if file does not reopen.
     }
-    while (getline(courseData, line)) {
+    while (getline(courseData, line)) { // Parses through each line in file
         stringstream courseStream(line);
-        tokens.clear();
-        while (getline(courseStream, word, ',')) {
-            // Reading the file gave me the UTF-8 BOM appended to the first token throwing off the size.
-            // The below checks each token for the BOM and strips it from the string.
-            // Source: https://cplusplus.com/forum/general/111203/
-            if (word.compare(0, 3, "\xEF\xBB\xBF") == 0) {
-                word.erase(0, 3);
-            }
+        tokens.clear(); // Prepares vector of tokenized words from line
+        while (getline(courseStream, word, ',')) { // Parses through each word in line
+            findBOM(word); // Cleans the token
             tokens.push_back(word);
         }
-        if (tokens.size() < 2) {
-            cout << "ERROR: Course line incomplete." << endl;
+        if (tokens.size() < 2) { // Verifies that each line has at least 2 elements.
+            cout << "ERROR: Course line incomplete." << endl; //FIXME Error handling
             break;
         }
-        if (tokens.size() > 2) {
+        if (tokens.size() > 2) { // Checks for prerequisites
             for (size_t i = 2; i < tokens.size(); ++i) {
                 cout << "Prerequisite course " << tokens.at(i) << " size " << tokens.at(i).size() << endl;
-                for (const auto& courses : courseParameters) {
-                    if (courses == tokens.at(i)) {
-                        cout << "Course Param: " << courses << endl;
-                        cout << "Param Match: " << tokens.at(i) << endl;
-                        // FIX ME CALL A STRUCT FUNCTION??
+                int iterator = {};
+                for (const auto& courses : courseParameters) { // Iterates through the default courses
+                    cout << "Checking " << courses << " to " << tokens.at(i) << endl; // FIXME remove in final product
+                    if (courses == tokens.at(i)) { // If the pre-req is found within the course catalog
+                        ++iterator;
+                        cout << iterator << " match found." << endl; //FIXME remove in live product
+                        break;
                     }
                 }
+                if (iterator != 1) { // The pre-req does not exist
+                    cout << "No matches found!" << endl; //FIXME add error handling
+                }
             }
-            ++iteration; // FIXME Remove this in final product.
-            cout << "Iteration number: " << iteration << endl;
         }
-        cout << endl;
-        cout << "VECTOR SIZE: " << tokens.size() << endl;
+        fileContents.push_back(tokens);
     }
     cout << "End of file reached. Closing it now." << endl;
     courseData.close();
+    return fileContents;
 }
 
-void printCourseList(const string& filePath) {//FIXME change arguments to tree
-    cout << "Print the course list" << endl;
+void printCourseList(vector<Course> courses) {//FIXME change arguments to tree
+    for (int i = 0; i < courses.size(); ++i) {
+        displayCourse(courses.at(i));
+    }
 }
 
 void printCourse(const string& filePath) { //FIXME search tree for a course
@@ -108,6 +199,8 @@ void printCourse(const string& filePath) { //FIXME search tree for a course
 }
 
 void mainMenu(const string& path) {
+    vector<vector<string>> courseInfo = checkDataIntegrity(path);
+    vector<Course> courses = conStructCourses(courseInfo);
     int userInput = {};
 
     while (userInput != 9) {
@@ -129,10 +222,11 @@ void mainMenu(const string& path) {
 
         switch (userInput) {
             case 1:
-                checkDataIntegrity(path);
+
+
                 break;
             case 2:
-                printCourseList("test");
+                printCourseList(courses); //FIX ME: Needs to traverse through tree, not vector.
                 break;
             case 3:
                 printCourse("test");
