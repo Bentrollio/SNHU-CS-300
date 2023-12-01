@@ -69,10 +69,15 @@ vector<Course> conStructCourses(vector<vector<string>> contents) {
     return courses; // Returns vector of course objects.
 }
 
+/**
+ * Checks a string that was tokenized from a file for the UTF-8 BOM prepended to it.
+ * If found, it trims the string to maintain data integrity.
+ *
+ * Source: https://cplusplus.com/forum/general/111203/
+ * @param - A string
+ * @return - A string with the first 3 characters trimmed from it.
+ */
 string findBOM(string &word) {
-    // Reading the file gave me the UTF-8 BOM appended to my token.
-    // The below checks each token for the BOM.
-    // Source: https://cplusplus.com/forum/general/111203/
     if (word.compare(0, 3, "\xEF\xBB\xBF") == 0) {
         word.erase(0, 3);
     }
@@ -121,6 +126,35 @@ vector <string> loadDefaultCourseList(const string& filePath) {
     return defaultCourses;
 }
 
+vector<string> verifyPrerequisites(vector<string> &courseTokens, vector<string> &courseCatalog) {
+
+    if (courseTokens.size() < 2) { // Verifies that each line has at least 2 elements.
+        //cout << "ERROR: Course line incomplete." << endl; //FIXME Error handling
+        courseTokens = {};
+        return courseTokens;
+    }
+    if (courseTokens.size() > 2) { // Checks for prerequisites
+        for (size_t i = 2; i < courseTokens.size(); ++i) {
+            cout << "Prerequisite course " << courseTokens.at(i) << " size " << courseTokens.at(i).size() << endl;
+            int iterator = {};
+            for (const auto& courses : courseCatalog) { // Iterates through the default courses
+                cout << "Checking " << courses << " to " << courseTokens.at(i) << endl; // FIXME remove in final product
+                if (courses == courseTokens.at(i)) { // If the pre-req is found within the course catalog
+                    ++iterator;
+                    cout << iterator << " match found." << endl; //FIXME remove in live product
+                    break;
+                }
+            }
+            if (iterator != 1) { // The pre-req does not exist
+                //cout << "No matches found!" << endl; //FIXME add error handling
+                courseTokens = {};
+                return courseTokens;
+            }
+        }
+    }
+    return courseTokens;
+}
+
 /**
  * Parses through a text or CSV file, ensuring proper formatting for compatibility
  * with the program.
@@ -135,13 +169,13 @@ vector <string> loadDefaultCourseList(const string& filePath) {
  */
 vector<vector<string>> checkDataIntegrity(const string& filePath) {
     vector<string> courseParameters = loadDefaultCourseList(filePath);
+    vector<string> tokens = {};
+    vector<vector<string>> fileContents = {};
 
     if (courseParameters.empty()) { // Error handling for loadDefaultCourseList()
         cerr << "File could not found. Check directory" << endl; // FIXME Should throw an error + exit
+        return fileContents;
     }
-
-    vector<string> tokens = {};
-    vector<vector<string>> fileContents = {};
 
     string line;
     string word;
@@ -160,26 +194,11 @@ vector<vector<string>> checkDataIntegrity(const string& filePath) {
             findBOM(word); // Cleans the token
             tokens.push_back(word);
         }
-        if (tokens.size() < 2) { // Verifies that each line has at least 2 elements.
-            cout << "ERROR: Course line incomplete." << endl; //FIXME Error handling
-            break;
-        }
-        if (tokens.size() > 2) { // Checks for prerequisites
-            for (size_t i = 2; i < tokens.size(); ++i) {
-                cout << "Prerequisite course " << tokens.at(i) << " size " << tokens.at(i).size() << endl;
-                int iterator = {};
-                for (const auto& courses : courseParameters) { // Iterates through the default courses
-                    cout << "Checking " << courses << " to " << tokens.at(i) << endl; // FIXME remove in final product
-                    if (courses == tokens.at(i)) { // If the pre-req is found within the course catalog
-                        ++iterator;
-                        cout << iterator << " match found." << endl; //FIXME remove in live product
-                        break;
-                    }
-                }
-                if (iterator != 1) { // The pre-req does not exist
-                    cout << "No matches found!" << endl; //FIXME add error handling
-                }
-            }
+        verifyPrerequisites(tokens, courseParameters);
+        if (tokens.empty()) {
+            cerr << "Prerequisite mismatch with Course Catalog." << endl; // FIXME should throw an error +
+            fileContents = {};
+            return fileContents;
         }
         fileContents.push_back(tokens);
     }
