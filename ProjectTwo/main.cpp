@@ -51,6 +51,7 @@ private:
 
     void addNode(Node* node, Course course);
     void inOrder(Node* node);
+    void ChopTree(Node* node);
 
 public:
     BinarySearchTree();
@@ -68,11 +69,22 @@ BinarySearchTree::BinarySearchTree() {
     root = nullptr;
 }
 
+void BinarySearchTree::ChopTree(Node* node) {
+
+    if (node) {
+        ChopTree(node->left);
+        ChopTree(node->right);
+        delete node;
+    }
+}
+
 /**
  * Destructor
  */
 BinarySearchTree::~BinarySearchTree() {
     // recurse from root deleting every node
+    ChopTree(root);
+
 }
 
 /**
@@ -183,6 +195,13 @@ static void displayCourse(Course course) {
     cout << "------------------------------------" << endl;
 }
 
+static void displayErrorFileLine(vector<string>& errorLine) {
+    for (const auto& t : errorLine) {
+        cout << t << " ";
+    }
+    cout << endl;
+}
+
 /**
  * Builds Course objects by parsing through each element within a string vector nested
  * inside of a parent vector.
@@ -248,9 +267,9 @@ static vector <string> loadDefaultCourseList(const string& filePath) {
     ifstream courseData;
     courseData.open(filePath, ios::in);
 
-    // Returns empty vector if file does not open.
+    // Exception handling in case file does not open.
     if (!courseData.is_open()) {
-        return defaultCourses;
+        throw "file not opened";
     }
     cout << "File successfully opened." << endl;
 
@@ -275,14 +294,17 @@ static vector <string> loadDefaultCourseList(const string& filePath) {
 
 static vector<string> verifyPrerequisites(vector<string> &courseTokens, vector<string> &courseCatalog) {
 
-    if (courseTokens.size() < 2) { // Verifies that each line has at least 2 elements.
-        //cout << "ERROR: Course line incomplete." << endl; //FIXME Error handling
-        courseTokens = {};
-        return courseTokens;
+    if (courseTokens.size() < 2) { // Verifies that each line has at least 2 elements
+        // Outputs the invalid course line in file for user to review
+        displayErrorFileLine(courseTokens);
+        // Exception handling, will end program
+        throw "Above Course Line Incomplete, please update file with at least COURSE ID and COURSE TITLE";
     }
+
     if (courseTokens.size() > 2) { // Checks for prerequisites
         for (size_t i = 2; i < courseTokens.size(); ++i) {
             cout << "Prerequisite course " << courseTokens.at(i) << " size " << courseTokens.at(i).size() << endl;
+
             int iterator = {};
             for (const auto& courses : courseCatalog) { // Iterates through the default courses
                 cout << "Checking " << courses << " to " << courseTokens.at(i) << endl; // FIXME remove in final product
@@ -292,10 +314,11 @@ static vector<string> verifyPrerequisites(vector<string> &courseTokens, vector<s
                     break;
                 }
             }
+
             if (iterator != 1) { // The pre-req does not exist
-                //cout << "No matches found!" << endl; //FIXME add error handling
-                courseTokens = {};
-                return courseTokens;
+                displayErrorFileLine(courseTokens);
+                throw "Above Course Line has non-existent prerequisite course.";
+
             }
         }
     }
@@ -319,36 +342,29 @@ static vector<vector<string>> checkDataIntegrity(const string& filePath) {
     vector<string> tokens = {};
     vector<vector<string>> fileContents = {};
 
-    if (courseParameters.empty()) { // Error handling for loadDefaultCourseList()
-        cerr << "File could not found. Check directory" << endl; // FIXME Should throw an error + exit
-        return fileContents;
-    }
-
     string line;
     string word;
 
     ifstream courseData;
     courseData.open(filePath, ios::in);
 
-    if (courseData.fail()) {
-        cout << "ERROR: Check file path." << endl;
-        return fileContents; // Returns empty vector if file does not reopen.
+    if (courseData.fail()) { // Error handling in case file does not open
+        throw "Check file path.";
     }
+
     while (getline(courseData, line)) { // Parses through each line in file
         stringstream courseStream(line);
         tokens.clear(); // Prepares vector of tokenized words from line
+
         while (getline(courseStream, word, ',')) { // Parses through each word in line
             findBOM(word); // Cleans the token
             tokens.push_back(word);
         }
         verifyPrerequisites(tokens, courseParameters);
-        if (tokens.empty()) {
-            cerr << "Prerequisite mismatch with Course Catalog." << endl; // FIXME should throw an error +
-            fileContents = {};
-            return fileContents;
-        }
+
         fileContents.push_back(tokens);
     }
+
     cout << "End of file reached. Closing it now." << endl;
     courseData.close();
     return fileContents;
@@ -407,12 +423,18 @@ static void printCourseInformation(BinarySearchTree* tree, string courseNumber) 
 string processCommandLine(int argc, char* argv[]) {
     // Process command line arguments
     string filePath;
+
     switch (argc) {
         case 2:
             filePath = argv[1];
             break;
         default:
-            filePath = "/Users/abaires/SNHU-CS-300/ProjectTwo/ABCU_Advising_Program_Input.txt";
+            cout << "Enter the file name to be loaded. Or press 'd' to load default file." << endl;
+            cin >> filePath;
+            if (filePath == "d") { // Opens default file for project
+                filePath = "/Users/abaires/SNHU-CS-300/ProjectTwo/ABCU_Advising_Program_Input.txt";
+                break;
+            }
             break;
     }
     return filePath;
@@ -478,6 +500,11 @@ static void mainMenu(const string& path) {
  * @param arg[2] the bid Id to use when searching the list (optional)
  */
 int main(int argc, char* argv[]) {
-    mainMenu(processCommandLine(argc, argv));
+    try {
+        mainMenu(processCommandLine(argc, argv));
+    }
+    catch (const char* exp) {
+        cout << "EXCEPTION: " << exp << endl;
+    }
     return 0;
 }
