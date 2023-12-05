@@ -51,12 +51,14 @@ private:
 
     void addNode(Node* node, Course course);
     void inOrder(Node* node);
+    void preOrder(Node* node);
     void ChopTree(Node* node);
 
 public:
     BinarySearchTree();
     virtual ~BinarySearchTree();
     void InOrder();
+    void PreOrder();
     void Insert(Course course);
     Course Search(string courseID);
 };
@@ -98,7 +100,14 @@ BinarySearchTree::~BinarySearchTree() {
 void BinarySearchTree::InOrder() {
     // Calls inOrder function with root as argument
     this->inOrder(root);
+}
 
+/**
+ * Traverse the tree in pre-order
+ */
+void BinarySearchTree::PreOrder() {
+    // Calls preOrder function with root as argument
+    this->preOrder(root);
 }
 
 /**
@@ -110,6 +119,7 @@ void BinarySearchTree::Insert(Course course) {
     // If the tree is empty, this node is the root.
     if (root == nullptr) {
         root = new Node(course);
+        cout << root->course.courseID << "!!!" << endl;
     }
         // Otherwise, call the add node function with the root and new course.
     else {
@@ -142,6 +152,10 @@ Course BinarySearchTree::Search(string courseID) {
             current = current->right;
         }
     }
+
+    // Default constructor if the course is not found.
+    Course blankCourse;
+    return blankCourse;
 }
 
 /**
@@ -195,6 +209,20 @@ void BinarySearchTree::inOrder(Node* node) {
     }
 }
 
+void BinarySearchTree::preOrder(Node* node) {
+    if (node != nullptr) {
+        cout << node->course.courseID << " - " << node->course.courseName << endl;
+        cout << "Prerequisites: ";
+        for (const auto& preReq : node->course.coursePrerequisites) {
+            cout << preReq << " ";
+        }
+        cout << endl;
+        cout << "--------------------------------------------" << endl;
+        preOrder(node->left);
+        preOrder(node->right);
+    }
+}
+
 /**
  * Displays the course information to the console (std::out)
  *
@@ -232,7 +260,7 @@ static void displayErrorFileLine(vector<string>& errorLine) {
  * @return - A vector of Course objects.
  */
 // Pun intended.
-static vector<Course> conStructCourses(vector<vector<string>> contents) {
+static vector<Course> conStructCourses(vector<vector<string>> &contents) {
     vector<Course> courses;
     // Iterate through each row
     for (const auto& row : contents) {
@@ -298,7 +326,6 @@ static vector <string> loadDefaultCourseList(const string& filePath) {
     string line;
     string word;
 
-    // FIXME: Functionalize while loops. DRY
     while (getline(courseData, line)) { // Parses through each line in file
         stringstream courseStream(line);
         temp.clear(); // Prepares the temp vector to store a new line
@@ -377,7 +404,6 @@ static vector<vector<string>> fileParser(const string& filePath) {
         throw "Check file path.";
     }
 
-    // FIXME functionalize while loops DRY
     while (getline(courseData, line)) { // Parses through each line in file
         stringstream courseStream(line);
         tokens.clear(); // Prepares vector of tokenized words from line
@@ -440,8 +466,23 @@ static bool compareCourseID(const Course& firstCourse, const Course& secondCours
  */
 static vector<Course> sortVector(vector<Course>& sortee) {
     sort(sortee.begin(), sortee.end(), compareCourseID);
+
     printCourseList(sortee);
+
     return sortee;
+}
+
+static void loadBalancedTree(vector<Course>& courses, BinarySearchTree* tree, int start, int end) {
+    // Base case
+    if (start > end) {
+        return;
+    }
+
+    int mid = (start + end) / 2;
+
+    tree->Insert(courses.at(mid)); // Middle element is the root.
+    loadBalancedTree(courses, tree, start, mid - 1); // Get middle element of left side of vector partition and insert
+    loadBalancedTree(courses, tree, mid + 1, end); // Get middle element of right side of vector partition and insert
 }
 
 /**
@@ -472,6 +513,7 @@ static void printCourseInformation(BinarySearchTree* tree, string courseNumber) 
     }
     else {
         cout << "Course " << courseNumber << " not found in catalog." << endl;
+
     }
 }
 
@@ -516,8 +558,20 @@ static void mainMenu(vector <Course> &courseVector, BinarySearchTree* tree) {
 
             case 3:
                 cout << "What course do you want to know about?" << endl;
-                cin >> courseNumber;
+                cin.ignore();
+                cin>>courseNumber;
+                transform(courseNumber.begin(), courseNumber.end(), courseNumber.begin(), ::toupper);
+                cout << courseNumber << endl;
                 printCourseInformation(tree, courseNumber);
+                break;
+            case 4:
+                sortVector(courseVector);
+                loadBalancedTree(courseVector, tree, 0, courseVector.size() - 1);
+                cout << "PreOrder" << endl;
+                tree->PreOrder();
+                cout << endl;
+                cout << "InOrder" << endl;
+                tree -> InOrder();
                 break;
 
             case 9:
