@@ -69,6 +69,11 @@ BinarySearchTree::BinarySearchTree() {
     root = nullptr;
 }
 
+/**
+ * Recursively deletes tree nodes
+ *
+ * @param node Current node in tree
+ */
 void BinarySearchTree::ChopTree(Node* node) {
 
     if (node) {
@@ -98,6 +103,8 @@ void BinarySearchTree::InOrder() {
 
 /**
  * Insert Course into tree.
+ *
+ * @param Course - course object
  */
 void BinarySearchTree::Insert(Course course) {
     // If the tree is empty, this node is the root.
@@ -111,7 +118,9 @@ void BinarySearchTree::Insert(Course course) {
 }
 
 /**
- * Search for a course
+ * Traverses the tree until a Course object has a matching courseID.
+ *
+ * @param string courseID - the course number being searched.
  */
 Course BinarySearchTree::Search(string courseID) {
     // Sets current node equal to root
@@ -138,8 +147,8 @@ Course BinarySearchTree::Search(string courseID) {
 /**
  * Add a course to some node (recursive)
  *
- * @param node Current node in tree
- * @param course Course to be added
+ * @param node - Current node in tree
+ * @param course - Course to be added
  */
 void BinarySearchTree::addNode(Node* node, Course course) {
     // Node is larger than the course so add to left subtree.
@@ -166,6 +175,12 @@ void BinarySearchTree::addNode(Node* node, Course course) {
     }
 }
 
+/**
+ * Traverses the tree in a left root, right root pattern to print
+ * in alphanumerical order.
+ *
+ * @param node - Current node in tree
+ */
 void BinarySearchTree::inOrder(Node* node) {
     if (node != nullptr) {
         inOrder(node->left);
@@ -183,7 +198,7 @@ void BinarySearchTree::inOrder(Node* node) {
 /**
  * Displays the course information to the console (std::out)
  *
- * @param - Course struct containing the course info
+ * @param - course - Course struct object containing the course info
  */
 static void displayCourse(Course course) {
     cout << course.courseID << " - " << course.courseName << endl;
@@ -195,9 +210,16 @@ static void displayCourse(Course course) {
     cout << "------------------------------------" << endl;
 }
 
+/**
+ * Used for error-checking. Since each line parsed from the file is a vector,
+ * this function iterates and prints each course in the vector to show
+ * the user why it is not in the proper format.
+ *
+ * @param - string vector - errorLine, the vector containing the line that has improper format
+ */
 static void displayErrorFileLine(vector<string>& errorLine) {
-    for (const auto& t : errorLine) {
-        cout << t << " ";
+    for (const auto& offendingCourse : errorLine) {
+        cout << offendingCourse << " ";
     }
     cout << endl;
 }
@@ -269,30 +291,42 @@ static vector <string> loadDefaultCourseList(const string& filePath) {
 
     // Exception handling in case file does not open.
     if (!courseData.is_open()) {
-        throw "file not opened";
+        throw "File not opened. Please check directory.";
     }
     cout << "File successfully opened." << endl;
 
     string line;
     string word;
 
+    // FIXME: Functionalize while loops. DRY
     while (getline(courseData, line)) { // Parses through each line in file
         stringstream courseStream(line);
         temp.clear(); // Prepares the temp vector to store a new line
         while (getline(courseStream, word, ',')) { // Parses through each word stripping comma
-
             findBOM(word); // Cleans the token
             temp.push_back(word); // Each word in the line is stored in a temporary vector
         }
+
         defaultCourses.push_back(temp.at(0)); // First element is the default course in catalog
     }
-    cout << "End of file reached. Closing it now..." << endl;
-    courseData.close();
 
-    return defaultCourses;
+    courseData.close();
+    return defaultCourses; // Default course catalog created
 }
 
-static vector<string> verifyPrerequisites(vector<string> &courseTokens, vector<string> &courseCatalog) {
+/**
+ * Ensures that the vector containing a line of course information is in proper format.
+ * The function checks that each line in the text file is in the below format:
+ *      Course ID, Course name
+ *      OR
+ *      Course ID, Course name, Course Prerequisite 1, Course Prerequisite 2, etc.
+ * It then checks that the pre-req exists inside the default course catalog.
+ *
+ * @param - courseTokens - string vector that has prerequisites.
+ * @param - courseCatalog - string vector that contains the default course catalog each prereq is compared with
+ * @return - courseTokens - string vector that has been verified and error-checked
+ */
+static vector<string> verifyDataIntegrity(vector<string> &courseTokens, vector<string> &courseCatalog) {
 
     if (courseTokens.size() < 2) { // Verifies that each line has at least 2 elements
         // Outputs the invalid course line in file for user to review
@@ -302,20 +336,16 @@ static vector<string> verifyPrerequisites(vector<string> &courseTokens, vector<s
     }
 
     if (courseTokens.size() > 2) { // Checks for prerequisites
-        for (size_t i = 2; i < courseTokens.size(); ++i) {
-            cout << "Prerequisite course " << courseTokens.at(i) << " size " << courseTokens.at(i).size() << endl;
-
-            int iterator = {};
-            for (const auto& courses : courseCatalog) { // Iterates through the default courses
-                cout << "Checking " << courses << " to " << courseTokens.at(i) << endl; // FIXME remove in final product
-                if (courses == courseTokens.at(i)) { // If the pre-req is found within the course catalog
-                    ++iterator;
-                    cout << iterator << " match found." << endl; //FIXME remove in live product
+        for (size_t i = 2; i < courseTokens.size(); ++i) { // Iterate through last 2 elements of line (pre-reqs)
+            int matchingCourse = {};
+            for (const auto& individualCourse : courseCatalog) { // Iterates through the default course catalog
+                if (individualCourse == courseTokens.at(i)) { // If the pre-req is found within the course catalog
+                    ++matchingCourse;
                     break;
                 }
             }
 
-            if (iterator != 1) { // The pre-req does not exist
+            if (matchingCourse != 1) { // The pre-req does not exist
                 displayErrorFileLine(courseTokens);
                 throw "Above Course Line has non-existent prerequisite course.";
 
@@ -326,18 +356,13 @@ static vector<string> verifyPrerequisites(vector<string> &courseTokens, vector<s
 }
 
 /**
- * Parses through a text or CSV file, ensuring proper formatting for compatibility
- * with the program.
- *
- * The function checks that each line in the text file is in the below format:
- *      Course ID, Course name
- *      OR
- *      Course ID, Course name, Course Prerequisite 1, Course Prerequisite 2, etc.
+ * Parses through a file and tokenizes each line. Each line is stored as a vector within
+ * a vector.
  *
  * @param - A string containing the path to the text or csv file being parsed.
  * @return - A vector of vectors that stores each course and its prereqs.
  */
-static vector<vector<string>> checkDataIntegrity(const string& filePath) {
+static vector<vector<string>> fileParser(const string& filePath) {
     vector<string> courseParameters = loadDefaultCourseList(filePath);
     vector<string> tokens = {};
     vector<vector<string>> fileContents = {};
@@ -352,24 +377,31 @@ static vector<vector<string>> checkDataIntegrity(const string& filePath) {
         throw "Check file path.";
     }
 
+    // FIXME functionalize while loops DRY
     while (getline(courseData, line)) { // Parses through each line in file
         stringstream courseStream(line);
         tokens.clear(); // Prepares vector of tokenized words from line
-
         while (getline(courseStream, word, ',')) { // Parses through each word in line
             findBOM(word); // Cleans the token
             tokens.push_back(word);
         }
-        verifyPrerequisites(tokens, courseParameters);
 
+        verifyDataIntegrity(tokens, courseParameters);
         fileContents.push_back(tokens);
     }
 
-    cout << "End of file reached. Closing it now." << endl;
+    cout << "File successfully processed." << endl;
     courseData.close();
     return fileContents;
 }
 
+/**
+ * Builds Course objects by parsing through each element within a string vector nested
+ * inside of a parent vector.
+ *
+ * @param - courses - A vector of Course objects.
+ * @param - tree - An empty binary search tree the courses will be attach to.
+ */
 static void loadCoursesIntoTree(vector<Course>& courses, BinarySearchTree* tree) {
     for (Course& course : courses) {
         tree->Insert(course);
@@ -377,29 +409,60 @@ static void loadCoursesIntoTree(vector<Course>& courses, BinarySearchTree* tree)
     courses.clear();
 }
 
+/**
+ * FIX ME. Function used for testing purposes.
+ *
+ * @param - courses - A vector of Course objects.
+ *
+ */
 static void printCourseList(vector<Course> courses) {//FIXME change arguments to tree
     for (size_t i = 0; i < courses.size(); ++i) {
         displayCourse(courses.at(i));
     }
 }
 
+/**
+ * Compares adjacent course IDs inside of a vector for a linear sort.
+ *
+ * @param - two course objects.
+ *
+ */
 static bool compareCourseID(const Course& firstCourse, const Course& secondCourse) {
     return firstCourse.courseID < secondCourse.courseID;
 }
 
+/**
+ * Sorts a vector in ascending order. This will be used to create a balanced BST from the file to
+ * alleviate the worst case runtime analysis of O(n).
+ *
+ * @param - sortee - a vector of Course objects.
+ *
+ */
 static vector<Course> sortVector(vector<Course>& sortee) {
-
     sort(sortee.begin(), sortee.end(), compareCourseID);
     printCourseList(sortee);
     return sortee;
 }
 
+/**
+ * Calls the InOrder() function to print a sample schedule.
+ *
+ * @param - tree - the binary search tree storing course objects.
+ *
+ */
 static void printSampleSchedule(BinarySearchTree* tree) {
     cout << "Here is a sample schedule:" << endl;
     cout << endl;
     tree->InOrder();
 }
 
+/**
+ * Searches the tree for a specific course number.
+ *
+ * @param - tree - the binary search tree storing course objects.
+ * @param - courseNumber - string with the course ID being searched for.
+ *
+ */
 static void printCourseInformation(BinarySearchTree* tree, string courseNumber) {
     Course course;
     course = tree->Search(courseNumber);
@@ -413,42 +476,13 @@ static void printCourseInformation(BinarySearchTree* tree, string courseNumber) 
 }
 
 /**
+ * Gets user input and displays a main menu. The user can load the course objects into the
+ * Binary Search tree. They have the choice of printing a list of courses, or searching
+ * for a specific course. If the user enters 9, the program exits.
  *
- * Handles and checks command-line arguments during execution and stores the csv file path into a variable
- * for the mainMenu() function to utilize when it calls loadBids().
- *
- * @param argc - number of command line arguments
- * @param argv - vector with the actual command line arguments
+ * @param - courseVector, a vector of Course object and tree, an empty Binary Search Tree
  */
-string processCommandLine(int argc, char* argv[]) {
-    // Process command line arguments
-    string filePath;
-
-    switch (argc) {
-        case 2:
-            filePath = argv[1];
-            break;
-        default:
-            cout << "Enter the file name to be loaded. Or press 'd' to load default file." << endl;
-            cin >> filePath;
-            if (filePath == "d") { // Opens default file for project
-                filePath = "/Users/abaires/SNHU-CS-300/ProjectTwo/ABCU_Advising_Program_Input.txt";
-                break;
-            }
-            break;
-    }
-    return filePath;
-}
-
-static void mainMenu(const string& path) {
-    vector<vector<string>> courseInfo = checkDataIntegrity(path);
-    vector<Course> courses = conStructCourses(courseInfo);
-
-    courseInfo.clear(); // Finished verifying data, cleared memory of courseInfo.
-
-    BinarySearchTree* courseTree;
-    courseTree = new BinarySearchTree();
-
+static void mainMenu(vector <Course> &courseVector, BinarySearchTree* tree) {
     int userInput = {};
     string courseNumber = {};
 
@@ -472,25 +506,82 @@ static void mainMenu(const string& path) {
         switch (userInput) {
             case 1:
                 //sortVector(courses); FIXME adjust sort
-                loadCoursesIntoTree(courses, courseTree);
-                printCourseList(courses);
+                loadCoursesIntoTree(courseVector, tree);
+                printCourseList(courseVector);
                 break;
+
             case 2:
-                printSampleSchedule(courseTree);
+                printSampleSchedule(tree);
                 break;
+
             case 3:
                 cout << "What course do you want to know about?" << endl;
                 cin >> courseNumber;
-                printCourseInformation(courseTree, courseNumber);
+                printCourseInformation(tree, courseNumber);
                 break;
+
             case 9:
                 cout << "Thank you for using the course planner!" << endl;
                 break;
+
             default:
                 cout << userInput << " is not a valid option." << endl;
                 break;
         }
     }
+}
+
+/**
+ *
+ * Handles and checks command-line arguments during execution and stores the text file path into a variable
+ * for the programDriver() function to utilize when it calls loadBids().
+ *
+ * @param argc - number of command line arguments
+ * @param argv - vector with the actual command line arguments
+ */
+string processCommandLine(int argc, char* argv[]) {
+    // Process command line arguments
+    string filePath;
+
+    switch (argc) {
+        case 2:
+            filePath = argv[1];
+            break;
+
+        default:
+            cout << "Enter the file name to be loaded. Or press 'd' to load default file." << endl;
+            cin >> filePath;
+
+            if (filePath == "d") { // Opens default file for project
+                filePath = "/Users/abaires/SNHU-CS-300/ProjectTwo/ABCU_Advising_Program_Input.txt";
+                break;
+            }
+
+            break;
+    }
+    return filePath;
+}
+
+/**
+ *
+ * @param path - a string containing the path where the csv file can be found.
+ */
+static void programDriver(const string& path) {
+    try {
+        vector<vector<string>> courseInfo = fileParser(path);
+        vector<Course> courses = conStructCourses(courseInfo);
+
+        courseInfo.clear(); // Finished verifying data, cleared memory of courseInfo.
+
+        BinarySearchTree* courseTree;
+        courseTree = new BinarySearchTree();
+
+        mainMenu(courses, courseTree);
+    }
+    catch (const char* exp) { // Exception handling
+        cout << "EXCEPTION: " << exp << endl;
+    }
+    return;
 }
 
 /**
@@ -500,11 +591,8 @@ static void mainMenu(const string& path) {
  * @param arg[2] the bid Id to use when searching the list (optional)
  */
 int main(int argc, char* argv[]) {
-    try {
-        mainMenu(processCommandLine(argc, argv));
-    }
-    catch (const char* exp) {
-        cout << "EXCEPTION: " << exp << endl;
-    }
+
+    programDriver(processCommandLine(argc, argv));
+
     return 0;
 }
